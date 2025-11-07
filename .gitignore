@@ -80,5 +80,4 @@ yarn-error.log*
 hs_err_pid*
 replay_pid*
 
-#Ignore local Spring config
-/src/main/resources/application.properties
+
