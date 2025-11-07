@@ -79,3 +79,6 @@ yarn-error.log*
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+#Ignore local Spring config
+/src/main/resources/application.properties
