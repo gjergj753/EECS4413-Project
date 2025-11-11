@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   CardMedia,
@@ -9,18 +8,15 @@ import {
   Box,
 } from "@mui/material";
 
-export default function BookCard({ book, onAddToCart, onViewDetails }) {
-  const handleCardClick = (e) => {
-    if (e.target.closest(".add-to-cart-btn")) return;
-    onViewDetails(book.bookId);
-  };
-
+export default function BookCard({ book, onAddToCart, onViewDetails}) {
   return (
     <Card
-      onClick={handleCardClick}
+      onClick={(e) => {
+        onViewDetails(book.bookId);
+      }}
       sx={{
-        width: 220, 
-        height: 360, 
+        width: { xs: 160, sm: 200, md: 220 },
+        height: { xs: 300, sm: 340, md: 360 },
         m: 1,
         cursor: "pointer",
         display: "flex",
@@ -36,45 +32,17 @@ export default function BookCard({ book, onAddToCart, onViewDetails }) {
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         <CardMedia
           component="img"
-          image={book.imageURL}
+          image={book.imageUrl}
           alt={book.title}
-          sx={{
-            height: 160, // ✅ consistent image area
-            objectFit: "cover",
-          }}
+          sx={{ height: 160, objectFit: "cover" }}
         />
-        <CardContent
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography
-            variant="subtitle1"
-            fontWeight="bold"
-            sx={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography variant="subtitle1" fontWeight="bold" noWrap>
             {book.title}
           </Typography>
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Typography variant="body2" color="text.secondary" noWrap>
             {book.author}
           </Typography>
-
           <Typography variant="body2" sx={{ mt: 1 }}>
             ${book.price.toFixed(2)}
           </Typography>

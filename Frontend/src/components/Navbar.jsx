@@ -10,9 +10,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import CategoryIcon from '@mui/icons-material/Category';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const drawerWidth = 240;
@@ -24,26 +22,14 @@ export default function Navbar({
   onLogout
 }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState(null); // For genre dropdown
   const navigate = useNavigate();
   const location = useLocation();
-
-  const genres = ["Fiction", "Non-Fiction", "History", "Sci-Fi", "Romance", "Fantasy"];
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
   const handleLogoutClick = () => {
     const confirmed = window.confirm("Are you sure you want to log out?");
     if (confirmed && onLogout) onLogout();
-  };
-
-  // Dropdown open/close
-  const handleGenreClick = (event) => setAnchorEl(event.currentTarget);
-  const handleGenreClose = () => setAnchorEl(null);
-
-  const handleGenreSelect = (genre) => {
-    setAnchorEl(null);
-    navigate(`/genres/${genre.toLowerCase()}`);
   };
 
   const drawerContent = (
@@ -135,7 +121,7 @@ export default function Navbar({
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#283593'  // indigo-blue for bookstore feel
+          backgroundColor: '#283593'  
         }}
       >
         <Toolbar>

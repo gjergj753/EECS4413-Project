@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
+import BookDetailsPage from "./pages/BookDetails";
 import { Box, Toolbar } from "@mui/material";
 import React from "react";
 
@@ -10,14 +11,13 @@ function AppContent() {
 
   // (later from context/backend)
   const isLoggedIn = true;
-  const cartCount = 2;
+  const cartCount = 1;
 
   // pages where Navbar should be hidden
   const isAuthPage = path === "/login" || path === "/sign-up";
 
   const handleLogout = () => {
     console.log("Logging out...");
-    // clear token or session here later
   };
 
   return (
@@ -44,7 +44,8 @@ function AppContent() {
 
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/account" element={<p>Account page</p>} />
+          <Route path="/book/:bookId" element={<BookDetailsPage />} />
+          <Route path="/account" element={<p>Account page</p>} />\
           <Route path="/login" element={<p>Login page</p>} />
           <Route path="/sign-up" element={<p>Sign-up page</p>} />
           <Route path="/cart" element={<p>Cart Page</p>} />
