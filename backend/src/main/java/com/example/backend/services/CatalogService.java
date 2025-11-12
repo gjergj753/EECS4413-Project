@@ -1,38 +1,84 @@
-package com.example.backend.catalog;
+package com.example.backend.services;
 
-import com.example.backend.catalog.dto.*;
+import com.example.backend.dto.BookDto;
+import com.example.backend.entity.Book;
+import com.example.backend.repository.BookRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service layer for catalog operations.
+ * logic for book browsing, searching, and retrieval.
+ */
 @Service
+@Transactional
 public class CatalogService {
 
-    public Paged<BookSummaryDto> listBooks(int page, int size, String sort, String q, String category) {
-        var items = List.of(
-                new BookSummaryDto(1L, "Placeholder title 1", "firstName1 LastName1", new BigDecimal("39.99"), null),
-                new BookSummaryDto(2L, "Placeholder title 2", "firstName2 LastName2", new BigDecimal("49.99"), null)
-        );
-        return new Paged<>(items, page, size, items.size(), 1);
+    // Repo for db access. Spring Data JPA providing CRUD operations
+    private final BookRepo bookRepo;
+
+    public CatalogService(BookRepo bookRepo) {
+        this.bookRepo = bookRepo;
     }
 
-    public BookDetailDto getBook(Long id) {
-        return new BookDetailDto(
-                id,
-                "book title",
-                "Authors name here",
-                "some description about the book here...",
-                new BigDecimal("420.69"),
-                12,
-                List.of("categoryA", "best-seller"),
-                null
-        );
+    public Page<BookDto> listBooks(int page, int size, String sortBy, String search, String genre) {
+        //Create pagination configuration. PageRequest combines page number, size, and sort order
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+
+        Page<Book> bookPage;
+
+        // Apply filters based on provided parameters. Check search and genre to decide which query method to use
+        if (genre != null && !genre.trim().isEmpty() && search != null && !search.trim().isEmpty()) {
+            // Both search and genre filter are applied, search in both title and author fields, filtered by genre
+            bookPage = bookRepo.findByTitleOrAuthorAndGenre(search, search, genre, pageable);
+        } else if (genre != null && !genre.trim().isEmpty()) {
+            // Only the genre filter applied
+            bookPage = bookRepo.findByGenre(genre, pageable);
+        } else if (search != null && !search.trim().isEmpty()) {
+            // Only search term applied. search in both title and author fields
+            bookPage = bookRepo.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(
+                    search, search, pageable);
+        } else {
+            // No filters. retrieve all books with pagination.
+            bookPage = bookRepo.findAll(pageable);
+        }
+
+        // Convert Page<Book> to Page<BookDto>, transforms each Book entity to BookDto.
+        return bookPage.map(this::convertToDto);
     }
 
-    public List<CategoryDto> categories() {
-        return List.of(
-                new CategoryDto("categoryA","some book title", 2),
-                new CategoryDto("CategoryB","another book title", 0)
-        );
+
+    public BookDto getBookById(Long id) {
+        // findById returns Optional<Book> - we handle the case where book doesn't exist
+        Book book = bookRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+
+        // Convert entity to DTO before returning
+        return convertToDto(book);
+    }
+
+
+    //Helper method to convert Book entity to BookDto.
+    //DTOs are used to control what data is exposed via the API.
+    private BookDto convertToDto(Book book) {
+        BookDto dto = new BookDto();
+
+        // Map each field from entity to DTO
+        dto.setBookId(book.getBookId());
+        dto.setTitle(book.getTitle());
+        dto.setAuthor(book.getAuthor());
+        dto.setPrice(book.getPrice());
+        dto.setDescription(book.getDescription());
+        dto.setIsbn(book.getIsbn());
+        dto.setImageUrl(book.getImageUrl());
+        dto.setQuantity(book.getQuantity());
+        dto.setYear(book.getYear());
+        dto.setGenres(book.getGenres());
+
+        return dto;
     }
 }
