@@ -29,7 +29,7 @@ export default function Navbar({
 
   const handleLogoutClick = () => {
     const confirmed = window.confirm("Are you sure you want to log out?");
-    if (confirmed && onLogout) onLogout();
+    if (confirmed && onLogout) onLogout(); navigate("/");
   };
 
   const drawerContent = (
