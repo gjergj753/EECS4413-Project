@@ -34,6 +34,24 @@ public class Order {
     @Column(name = "created_at")
     private final LocalDateTime createdAt = LocalDateTime.now();
 
+    // Getters and setters (no setter for final createdAt)
+    public Long getOrderId() { return orderId; }
+    public void setOrderId(Long orderId) { this.orderId = orderId; }
 
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+
+    public List<OrderItem> getOrderItemList() { return orderItemList; }
+    public void setOrderItemList(List<OrderItem> orderItemList) { this.orderItemList = orderItemList; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public Payment getPayment() { return payment; }
+    public void setPayment(Payment payment) { this.payment = payment; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }
