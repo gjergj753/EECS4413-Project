@@ -1,5 +1,6 @@
 package com.example.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,8 @@ public class AddressDto {
     private String postalCode;
     private String country;
 
+    // Prevents circular reference: Address -> User -> Address loop
+    @JsonBackReference("user-address")
     private UserDto user;
 
 }
