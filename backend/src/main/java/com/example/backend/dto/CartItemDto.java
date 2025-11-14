@@ -1,8 +1,7 @@
 package com.example.backend.dto;
 
 
-import com.example.backend.entity.Book;
-import com.example.backend.entity.Cart;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -18,6 +17,8 @@ public class CartItemDto {
 
     private Long cartItemId;
 
+    // Prevents circular reference: CartItem -> Cart -> CartItem loop
+    @JsonBackReference("cart-items")
     private CartDto cart;
 
     private BookDto book;
