@@ -22,6 +22,8 @@ public class Response {
     private long totalElements;
 
     private AddressDto address;
+    //user can have multiple addresses. billing, shipping, etc.
+    private List<AddressDto> addressList;
 
     private UserDto user;
     private List<UserDto> userList;
