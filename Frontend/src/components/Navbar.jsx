@@ -54,7 +54,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, cartCount 
       <Divider />
 
       <List>
-        <ListItemButton selected={location.pathname === '/'} onClick={() => navigate('/')}>
+        <ListItemButton selected={location.pathname === '/'} onClick={() => navigate('/', { state: { reset: true } })}>
           <ListItemIcon><HomeIcon /></ListItemIcon>
           <ListItemText primary="Home" />
         </ListItemButton>

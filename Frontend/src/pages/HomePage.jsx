@@ -27,8 +27,20 @@ export default function HomePage() {
 
     // Sync state when URL changes (user clicks genre in navbar)
     useEffect(() => {
-        setSelectedGenre(genreFromUrl);
-    }, [genreFromUrl]);
+        if (location.state?.reset) {
+            // Reset filters + search
+            setSearchQuery("");
+            setSelectedGenre("All");
+            setSortBy("none");
+
+            // Re-fetch all books
+            fetchBooks();
+
+            // Clear reset flag so it doesn't persist on back navigation
+            navigate("/", { replace: true, state: {} });
+            setSelectedGenre(genreFromUrl)
+        }
+        }, [genreFromUrl, location.state]);
 
     // Search
     const [searchQuery, setSearchQuery] = useState("");
@@ -90,45 +102,45 @@ export default function HomePage() {
         <Box sx={{ width: "100%", p: 2 }}>
 
             <Box
-  sx={{
-    width: "100%",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    mb: 3,
-    flexWrap: "wrap",
-    gap: 2,
-  }}
->
-  {/* Search Bar */}
-  <Box
-    sx={{
-      flexGrow: 1,
-      minWidth: { xs: "100%", sm: "60%", md: "70%" },
-      display: "flex",
-      justifyContent: "center",
-    }}
-  >
-    <SearchBar
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      onSearchSubmit={handleSearch}
-    />
-  </Box>
+                sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                    flexWrap: "wrap",
+                    gap: 2,
+                }}
+            >
+                {/* Search Bar */}
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        minWidth: { xs: "100%", sm: "60%", md: "70%" },
+                        display: "flex",
+                        justifyContent: "center",
+                    }}
+                >
+                    <SearchBar
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        onSearchSubmit={handleSearch}
+                    />
+                </Box>
 
-  {/* Sort dropdown (FilterPanel) */}
-  <Box
-    sx={{
-      width: { xs: "100%", sm: "auto" }, 
-      display: "flex",
-      justifyContent: { xs: "center", sm: "flex-end" },
-    }}
-  >
-    <FilterPanel sortBy={sortBy} setSortBy={setSortBy} />
-  </Box>
-</Box>
+                {/* Sort dropdown (FilterPanel) */}
+                <Box
+                    sx={{
+                        width: { xs: "100%", sm: "auto" },
+                        display: "flex",
+                        justifyContent: { xs: "center", sm: "flex-end" },
+                    }}
+                >
+                    <FilterPanel sortBy={sortBy} setSortBy={setSortBy} />
+                </Box>
+            </Box>
 
-    
+
             {loading ? (
                 <Box textAlign="center" mt={5}>
                     <CircularProgress />

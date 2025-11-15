@@ -95,7 +95,23 @@ export default function BookDetailsPage() {
                         <Typography variant="body2" color="text.secondary" gutterBottom>
                             Year: {book.year}
                         </Typography>
-
+                        {/* Genres */}
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
+                            {book.genres.map((g) => (
+                                <Box
+                                    key={g}
+                                    sx={{
+                                        px: 1.5,
+                                        py: 0.5,
+                                        borderRadius: "20px",
+                                        backgroundColor: "#e0e0e0",
+                                        fontSize: "0.85rem",
+                                    }}
+                                >
+                                    {g}
+                                </Box>
+                            ))}
+                        </Box>
                         <Typography variant="body1" sx={{ my: 2 }}>
                             {book.description}
                         </Typography>
@@ -112,7 +128,7 @@ export default function BookDetailsPage() {
                             sx={{
                                 display: "flex",
                                 flexWrap: { xs: "wrap", sm: "nowrap" },
-                                gap: { xs: 2, sm: 1 },  
+                                gap: { xs: 2, sm: 1 },
                             }}
                         >
                             <Button
