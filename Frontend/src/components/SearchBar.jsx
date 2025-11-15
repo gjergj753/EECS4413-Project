@@ -35,7 +35,7 @@ export default function SearchBar({
 
       <TextField
         variant="standard"
-        placeholder="Search by title, author, or keyword..."
+        placeholder="Search by title, author, or ISBN..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyPress}
