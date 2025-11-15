@@ -1,11 +1,20 @@
 import React from "react";
-import { Box, TextField, InputAdornment, MenuItem, Select, FormControl } from "@mui/material";
+import {
+  Box,
+  TextField,
+  IconButton,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-export default function SearchBar({ genres, selectedGenre, onGenreChange, searchQuery, onSearchChange, onSearchSubmit }) {
+export default function SearchBar({
+  searchQuery,
+  setSearchQuery,
+  onSearchSubmit
+}) {
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      onSearchSubmit();
+      onSearchSubmit();   // calls HomePage search
     }
   };
 
@@ -15,54 +24,53 @@ export default function SearchBar({ genres, selectedGenre, onGenreChange, search
         display: "flex",
         alignItems: "center",
         backgroundColor: "#fff",
-        borderRadius: 2,
+        borderRadius: "8px",
         overflow: "hidden",
         boxShadow: 1,
         width: "100%",
         maxWidth: 600,
+        height: 44, 
       }}
     >
-      {/* Genre Dropdown */}
-      <FormControl sx={{ minWidth: 130, borderRight: "1px solid #ccc" }}>
-        <Select
-          value={selectedGenre}
-          onChange={(e) => onGenreChange(e.target.value)}
-          sx={{
-            "& .MuiSelect-select": {
-              py: 1.2,
-              pl: 1.5,
-            },
-          }}
-        >
-          {genres.map((genre) => (
-            <MenuItem key={genre} value={genre}>
-              {genre}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
 
-      {/* Search Field */}
       <TextField
         variant="standard"
         placeholder="Search by title, author, or keyword..."
         value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyPress}
         InputProps={{
           disableUnderline: true,
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="action" />
-            </InputAdornment>
-          ),
+          sx: {
+            px: 1.5,
+            py: 0,
+            height: "44px",       
+            display: "flex",
+            alignItems: "center", 
+          },
         }}
         sx={{
           flexGrow: 1,
-          px: 1.5,
           backgroundColor: "#fff",
         }}
       />
+
+      <IconButton
+        onClick={onSearchSubmit}
+        sx={{
+          width: 50,
+          height: "44px",       
+          borderRadius: 0,
+          bgcolor: "#3f51b5",
+          color: "white",
+          "&:hover": { bgcolor: "#303f9f" },
+          borderTopRightRadius: "8px",
+          borderBottomRightRadius: "8px",
+        }}
+      >
+        <SearchIcon />
+      </IconButton>
     </Box>
+
   );
 }

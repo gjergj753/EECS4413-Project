@@ -56,6 +56,7 @@ function AppContent() {
         {/* Define paths for pages */}
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/books" element={<HomePage />} />
           <Route path="/book/:bookId" element={<BookDetailsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/login" element={<LoginPage />} />

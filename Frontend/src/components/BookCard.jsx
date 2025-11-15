@@ -8,15 +8,13 @@ import {
   Box,
 } from "@mui/material";
 
-export default function BookCard({ book, onAddToCart, onViewDetails}) {
+export default function BookCard({ book, onAddToCart, onViewDetails }) {
   return (
     <Card
-      onClick={(e) => {
-        onViewDetails(book.bookId);
-      }}
+      onClick={() => onViewDetails(book.bookId)}
       sx={{
         width: { xs: 160, sm: 200, md: 220 },
-        height: { xs: 300, sm: 340, md: 360 },
+        height: { xs: 320, sm: 350, md: 370 },
         m: 1,
         cursor: "pointer",
         display: "flex",
@@ -49,12 +47,27 @@ export default function BookCard({ book, onAddToCart, onViewDetails}) {
         </CardContent>
       </Box>
 
-      <CardActions sx={{ justifyContent: "center", pb: 1 }}>
+      <CardActions sx={{ justifyContent: "center", pb: 1, px: 1 }}>
         <Button
-          className="add-to-cart-btn"
           size="small"
           variant="contained"
-          onClick={() => onAddToCart(book.bookId)}
+          fullWidth
+          onClick={(e) => {
+            e.stopPropagation();        
+            onAddToCart(book.bookId);
+          }}
+          sx={{
+            borderRadius: "20px",       
+            backgroundColor: "#3f51b5",
+            textTransform: "none",
+            fontWeight: "bold",
+            py: 0.7,
+            "&:hover": {
+              backgroundColor: "#303f9f",
+              transform: "scale(1.03)",
+            },
+            transition: "0.2s ease",
+          }}
         >
           Add to Cart
         </Button>
