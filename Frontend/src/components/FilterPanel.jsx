@@ -12,9 +12,6 @@ import {
 
 export default function FilterPanel({
   showFilters,
-  authors,
-  selectedAuthor,
-  setSelectedAuthor,
   priceRange,
   setPriceRange,
   sortBy,
@@ -32,21 +29,6 @@ export default function FilterPanel({
         }}
       >
         <Grid container spacing={2} justifyContent="center">
-          <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Author</InputLabel>
-              <Select
-                value={selectedAuthor}
-                onChange={(e) => setSelectedAuthor(e.target.value)}
-              >
-                {authors.map((a) => (
-                  <MenuItem key={a} value={a}>
-                    {a}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
 
           <Grid item xs={6} sm={3} md={2}>
             <TextField
@@ -87,6 +69,7 @@ export default function FilterPanel({
               </Select>
             </FormControl>
           </Grid>
+
         </Grid>
       </Box>
     </Collapse>
