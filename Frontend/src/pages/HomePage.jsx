@@ -34,11 +34,8 @@ export default function HomePage() {
     const [searchQuery, setSearchQuery] = useState("");
 
     // Filters
-    const [priceRange, setPriceRange] = useState({ min: 0, max: 100 });
-    const [sortBy, setSortBy] = useState("none");
 
-    // UI control
-    const [showFilters, setShowFilters] = useState(false);
+    const [sortBy, setSortBy] = useState("none");
 
     // Books
     const [loading, setLoading] = useState(true);
@@ -64,11 +61,6 @@ export default function HomePage() {
                         b.isbn.toLowerCase().includes(q)
                 );
             }
-            // Price
-            filtered = filtered.filter(
-                (b) => b.price >= priceRange.min && b.price <= priceRange.max
-            );
-
             // Sort
             if (sortBy === "priceLowHigh") filtered.sort((a, b) => a.price - b.price);
             else if (sortBy === "priceHighLow") filtered.sort((a, b) => b.price - a.price);
@@ -88,7 +80,7 @@ export default function HomePage() {
     // Re-run fetch when filters change OR URL genre changes
     useEffect(() => {
         fetchBooks();
-    }, [selectedGenre, priceRange, sortBy]);
+    }, [selectedGenre, sortBy]);
 
     const handleAddToCart = (bookId) => alert(`Book ${bookId} added to cart!`);
 
@@ -97,62 +89,46 @@ export default function HomePage() {
     return (
         <Box sx={{ width: "100%", p: 2 }}>
 
-            {/* Search + filter button */}
             <Box
-                sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
-                    flexWrap: "wrap",
-                    gap: 2,
-                }}
-            >
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                        minWidth: { xs: "100%", sm: "60%", md: "70%" },
-                        display: "flex",
-                        justifyContent: "center",
-                    }}
-                >
-                    <SearchBar
-                        genres={genres}
-                        selectedGenre={selectedGenre}
-                        onGenreChange={(g) => navigate(`/books?genre=${g}`)}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        onSearchSubmit={handleSearch}
-                    />
-                </Box>
+  sx={{
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    mb: 3,
+    flexWrap: "wrap",
+    gap: 2,
+  }}
+>
+  {/* Search Bar */}
+  <Box
+    sx={{
+      flexGrow: 1,
+      minWidth: { xs: "100%", sm: "60%", md: "70%" },
+      display: "flex",
+      justifyContent: "center",
+    }}
+  >
+    <SearchBar
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      onSearchSubmit={handleSearch}
+    />
+  </Box>
 
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: { xs: "center", sm: "flex-end" },
-                        width: { xs: "100%", sm: "auto" },
-                    }}
-                >
-                    <Button
-                        variant="outlined"
-                        onClick={() => setShowFilters((prev) => !prev)}
-                        startIcon={showFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        sx={{ whiteSpace: "nowrap", px: 2.5, py: 1, fontWeight: 500 }}
-                    >
-                        {showFilters ? "Hide Filters" : "Show Filters"}
-                    </Button>
-                </Box>
-            </Box>
+  {/* Sort dropdown (FilterPanel) */}
+  <Box
+    sx={{
+      width: { xs: "100%", sm: "auto" }, 
+      display: "flex",
+      justifyContent: { xs: "center", sm: "flex-end" },
+    }}
+  >
+    <FilterPanel sortBy={sortBy} setSortBy={setSortBy} />
+  </Box>
+</Box>
 
-            <FilterPanel
-                showFilters={showFilters}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-            />
-
+    
             {loading ? (
                 <Box textAlign="center" mt={5}>
                     <CircularProgress />
