@@ -84,7 +84,17 @@ public class UserService {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setAdmin(user.isAdmin());
+        dto.setHashedPassword(user.getHashedPassword());
         // password is write-only on the DTO
         return dto;
+    }
+
+    public UserDto login(String email, String password){
+        User user = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found with email: "+ email));
+        if(!(user.getHashedPassword().equals(password))){
+            throw new IllegalArgumentException("Invalid Password");
+        }
+
+        return convertToDto(user);
     }
 }

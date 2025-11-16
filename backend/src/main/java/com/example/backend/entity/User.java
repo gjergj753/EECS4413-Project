@@ -34,6 +34,7 @@ public class User {
     private boolean isAdmin = false;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
