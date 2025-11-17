@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import { useCart } from "../context/CartContext";
 const drawerWidth = 240;
 
 // simulating api call
@@ -24,15 +24,15 @@ function fetchGenres() {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(["Fiction", "Non-Fiction", "Sci-Fi", "History", "Fantasy", "Drama"]);
-    }, 300); 
+    }, 300);
   });
 }
 
-export default function Navbar({ isAdmin = false, isLoggedIn = false, cartCount = 0, onLogout }) {
+export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [genres, setGenres] = React.useState([]);
   const [openGenres, setOpenGenres] = React.useState(false);
-
+  const { cartCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -59,7 +59,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, cartCount 
           <ListItemText primary="Home" />
         </ListItemButton>
 
-        {/* 🔽 GENRES COLLAPSIBLE SECTION */}
+        {/* GENRES COLLAPSIBLE SECTION */}
         <ListItemButton onClick={() => setOpenGenres(!openGenres)}>
           <ListItemIcon><MenuBookIcon /></ListItemIcon>
           <ListItemText primary="Genres" />

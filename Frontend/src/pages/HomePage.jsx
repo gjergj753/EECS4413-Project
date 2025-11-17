@@ -7,12 +7,11 @@ import {
     CircularProgress,
     Button,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import BookCard from "../components/BookCard";
 import SearchBar from "../components/SearchBar";
 import FilterPanel from "../components/FilterPanel";
 import { dummyBooks } from "../data/dummyBooks";
+import { useCart } from "../context/CartContext";
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -20,7 +19,7 @@ export default function HomePage() {
 
     const queryParams = new URLSearchParams(location.search);
     const genreFromUrl = queryParams.get("genre") || "All";
-
+    const { addToCart } = useCart();
     const genres = ["All", ...new Set(dummyBooks.flatMap((b) => b.genres))];
 
     const [selectedGenre, setSelectedGenre] = useState(genreFromUrl);
@@ -40,7 +39,7 @@ export default function HomePage() {
             navigate("/", { replace: true, state: {} });
             setSelectedGenre(genreFromUrl)
         }
-        }, [genreFromUrl, location.state]);
+    }, [genreFromUrl, location.state]);
 
     // Search
     const [searchQuery, setSearchQuery] = useState("");
@@ -94,7 +93,13 @@ export default function HomePage() {
         fetchBooks();
     }, [selectedGenre, sortBy]);
 
-    const handleAddToCart = (bookId) => alert(`Book ${bookId} added to cart!`);
+    useEffect(() => {
+        setSelectedGenre(genreFromUrl);
+    }, [genreFromUrl]);
+
+    const handleAddToCart = (book) => {
+        addToCart(book);
+    };
 
     const handleViewDetails = (bookId) => navigate(`/book/${bookId}`);
 

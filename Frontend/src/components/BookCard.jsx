@@ -53,11 +53,11 @@ export default function BookCard({ book, onAddToCart, onViewDetails }) {
           variant="contained"
           fullWidth
           onClick={(e) => {
-            e.stopPropagation();        
-            onAddToCart(book.bookId);
+            e.stopPropagation();
+            onAddToCart(book);
           }}
           sx={{
-            borderRadius: "20px",       
+            borderRadius: "20px",
             backgroundColor: "#3f51b5",
             textTransform: "none",
             fontWeight: "bold",
