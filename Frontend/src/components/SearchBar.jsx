@@ -14,63 +14,76 @@ export default function SearchBar({
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      onSearchSubmit();   // calls HomePage search
+      onSearchSubmit();
     }
   };
 
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-        overflow: "hidden",
-        boxShadow: 1,
         width: "100%",
-        maxWidth: 600,
-        height: 44, 
+        display: "flex",
+        justifyContent: "center",
+        mt: 2,
       }}
     >
-
-      <TextField
-        variant="standard"
-        placeholder="Search by title, author, or ISBN..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleKeyPress}
-        InputProps={{
-          disableUnderline: true,
-          sx: {
-            px: 1.5,
-            py: 0,
-            height: "44px",       
-            display: "flex",
-            alignItems: "center", 
-          },
-        }}
+      <Box
         sx={{
-          flexGrow: 1,
+          display: "flex",
+          alignItems: "center",
           backgroundColor: "#fff",
-        }}
-      />
-
-      <IconButton
-        onClick={onSearchSubmit}
-        sx={{
-          width: 50,
-          height: "44px",       
-          borderRadius: 0,
-          bgcolor: "#3f51b5",
-          color: "white",
-          "&:hover": { bgcolor: "#303f9f" },
-          borderTopRightRadius: "8px",
-          borderBottomRightRadius: "8px",
+          borderRadius: "30px",
+          overflow: "hidden",
+          boxShadow: 3,
+          transition: "0.2s ease",
+          width: "100%",
+          maxWidth: { xs: 300, sm: 450, md: 600, lg: 700, xl: 800 },
+          height: { xs: 44, md: 52 },
         }}
       >
-        <SearchIcon />
-      </IconButton>
-    </Box>
+        <TextField
+          variant="standard"
+          placeholder="Search by title, author, or ISBN..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyPress}
+          InputProps={{
+            disableUnderline: true,
+            sx: {
+              px: { xs: 1.5, md: 2 },
+              fontSize: { xs: "0.9rem", md: "1.05rem" },
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+            },
+          }}
+          sx={{
+            flexGrow: 1,
+            backgroundColor: "#fff",
+          }}
+        />
 
+        <IconButton
+          onClick={onSearchSubmit}
+          sx={{
+            width: { xs: 48, md: 60 },
+            height: "100%",
+            borderRadius: 0,
+            bgcolor: "#3f51b5",
+            color: "white",
+            transition: "0.25s ease",
+            "&:hover": {
+              bgcolor: "#303f9f",
+              transform: "scale(1.05)",
+            },
+            borderTopRightRadius: "30px",
+            borderBottomRightRadius: "30px",
+          }}
+        >
+          <SearchIcon sx={{ fontSize: { xs: 22, md: 26 } }} />
+        </IconButton>
+      </Box>
+    </Box>
   );
 }
+
