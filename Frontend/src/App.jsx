@@ -11,6 +11,7 @@ import AccountPage from "./pages/AccountPage";
 import ShoppingCartPage from "./pages/ShoppingCartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSummaryPage from "./pages/OrderSummarypage";
+import OrdersPage from "./pages/OrdersPage";
 function AppContent() {
   const location = useLocation();
   const path = location.pathname;
@@ -61,7 +62,7 @@ function AppContent() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/sign-up" element={<SignupPage />} />
-          <Route path="/orders" element={<p>Orders Page</p>} />
+          <Route path="/orders" element={<OrdersPage/>} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success/:orderId" element={<OrderSummaryPage />} />
