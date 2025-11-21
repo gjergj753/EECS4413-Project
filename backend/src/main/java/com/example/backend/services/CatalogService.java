@@ -70,7 +70,11 @@ public class CatalogService {
         book.setPrice(bookDto.getPrice());
         book.setDescription(bookDto.getDescription());
         book.setIsbn(bookDto.getIsbn());
+
+        // Full-size image and thumbnail
         book.setImageUrl(bookDto.getImageUrl());
+        book.setThumbnailUrl(bookDto.getThumbnailUrl());
+
         book.setQuantity(bookDto.getQuantity());
         book.setYear(bookDto.getYear());
         book.setGenres(bookDto.getGenres() != null ? bookDto.getGenres() : new ArrayList<>());
@@ -103,7 +107,10 @@ public class CatalogService {
         dto.setPrice(book.getPrice());
         dto.setDescription(book.getDescription());
         dto.setIsbn(book.getIsbn());
+
         dto.setImageUrl(book.getImageUrl());
+        dto.setThumbnailUrl(book.getThumbnailUrl());
+
         dto.setQuantity(book.getQuantity());
         dto.setYear(book.getYear());
         dto.setGenres(book.getGenres());

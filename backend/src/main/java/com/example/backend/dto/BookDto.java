@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -29,12 +28,15 @@ public class BookDto {
 
     private String isbn;
 
+    // Full-size image URL
     private String imageUrl;
+
+    // Thumbnail image URL for cards / lists
+    private String thumbnailUrl;
 
     private int quantity;
 
     private int year;
 
     private List<String> genres;
-
 }

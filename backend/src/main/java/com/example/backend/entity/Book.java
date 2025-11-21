@@ -35,8 +35,13 @@ public class Book {
     @Column(unique = true)
     private String isbn;
 
+    // Full-size image URL
     @Column(name = "image_url")
     private String imageUrl;
+
+    // Thumbnail image URL for cards / lists
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @Column(name = "quantity")
     @NotNull(message = "Quantity is required")
