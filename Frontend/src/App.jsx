@@ -10,8 +10,12 @@ import SignupPage from "./pages/SignupPage";
 import AccountPage from "./pages/AccountPage";
 import ShoppingCartPage from "./pages/ShoppingCartPage";
 import CheckoutPage from "./pages/CheckoutPage";
-import OrderSummaryPage from "./pages/OrderSummarypage";
+import OrderSummaryPage from "./pages/OrderSummaryPage";
 import OrdersPage from "./pages/OrdersPage";
+import AdminSalesPage from "./pages/AdminSalesPage";
+import AdminInventoryPage from "./pages/AdminInventoryPage";
+import AdminCustomersPage from "./pages/AdminCustomersPage";
+
 function AppContent() {
   const location = useLocation();
   const path = location.pathname;
@@ -68,8 +72,9 @@ function AppContent() {
           <Route path="/order-success/:orderId" element={<OrderSummaryPage />} />
 
 
-          <Route path="/admin/inventory" element={<p>Admin Inventory Page</p>} />
-          <Route path="/admin/sales" element={<p>Admin Sales Page</p>} />
+          <Route path="/admin/inventory" element={<AdminInventoryPage />} />
+          <Route path="/admin/sales" element={<AdminSalesPage />} />
+          <Route path="/admin/customers" element={<AdminCustomersPage />} />
           
 
 

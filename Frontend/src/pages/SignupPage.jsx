@@ -19,7 +19,8 @@ export default function SignupPage() {
     email: "",
     password: "",
     confirm: "",
-  });
+  }); 
+  
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -136,12 +137,3 @@ export default function SignupPage() {
     </Box>
   );
 }
-
-
-
-        // <TextField name="firstName" label="First Name" value={form.firstName} onChange={handleChange} required/>
-        // <TextField name="lastName" label="Last Name" value={form.lastName} onChange={handleChange} required/>
-        // <TextField name="email" label="Email" value={form.email} onChange={handleChange} required />
-        // <TextField name="password" label="Password" type="password" value={form.password} onChange={handleChange} required />
-        // <TextField name="confirm" label="Confirm Password" type="password" value={form.confirm} onChange={handleChange} required />
-        // <Button variant="contained" type="submit">Sign Up</Button>

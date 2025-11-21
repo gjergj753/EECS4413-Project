@@ -5,6 +5,7 @@ import {
   List, ListItemButton, ListItemIcon, ListItemText, Divider, Box, Badge,
   Collapse
 } from '@mui/material';
+
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -15,6 +16,9 @@ import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import GroupIcon from '@mui/icons-material/Group';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../context/CartContext";
 const drawerWidth = 240;
@@ -89,7 +93,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
             </ListItemButton>
 
             <ListItemButton onClick={() => navigate('/orders')}>
-              <ListItemIcon><MenuBookIcon /></ListItemIcon>
+              <ListItemIcon><ListAltIcon /></ListItemIcon>
               <ListItemText primary="My Orders" />
             </ListItemButton>
           </>
@@ -120,12 +124,17 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
             </Typography>
             <ListItemButton onClick={() => navigate('/admin/inventory')}>
               <ListItemIcon><AdminPanelSettingsIcon /></ListItemIcon>
-              <ListItemText primary="Manage Inventory" />
+              <ListItemText primary="Maintain Inventory" />
             </ListItemButton>
 
             <ListItemButton onClick={() => navigate('/admin/sales')}>
-              <ListItemIcon><MenuBookIcon /></ListItemIcon>
+              <ListItemIcon><BarChartIcon /></ListItemIcon>
               <ListItemText primary="Sales History" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => navigate('/admin/customers')}>
+              <ListItemIcon><GroupIcon /></ListItemIcon>
+              <ListItemText primary="Manage Customers" />
             </ListItemButton>
           </>
         )}

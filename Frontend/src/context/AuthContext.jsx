@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
       return { success: true };
 
     // dummy customer
-    } else if (email === "johndoe@gmaila.com" && password === "password") {
+    } else if (email === "johndoe@gmail.com" && password === "password") {
       const dummyUser = {
         firstName: "John",
         lastName: "Doe",

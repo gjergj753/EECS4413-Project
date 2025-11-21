@@ -167,7 +167,7 @@ export default function OrderSummaryPage() {
                 transform: "scale(1.03)",
               },
             }}
-            onClick={() => navigate("/account")}
+            onClick={() => navigate("/orders")}
           >
             View Orders
           </Button>
