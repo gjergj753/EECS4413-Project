@@ -6,6 +6,7 @@ import com.example.backend.services.CatalogService;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 //REST controller for the book catalog. Handles HTTP requests for browsing and searching books.
 @RestController
@@ -67,6 +68,20 @@ public class CatalogController {
                 .status(200)
                 .message("Book found successfully")
                 .book(book)
+                .build();
+    }
+
+    /**
+     * Get a list of all distinct genres available in the catalog.
+     */
+    @GetMapping("/genres")
+    public Response getGenres() {
+        List<String> genres = catalogService.getAllGenres();
+
+        return Response.builder()
+                .status(200)
+                .message("Genres retrieved successfully")
+                .genres(genres)
                 .build();
     }
 }

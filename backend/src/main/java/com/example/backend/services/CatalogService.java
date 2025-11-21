@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service layer for catalog operations.
@@ -53,7 +54,6 @@ public class CatalogService {
         return bookPage.map(this::convertToDto);
     }
 
-
     public BookDto getBookById(Long id) {
         // findById returns Optional<Book> - we handle the case where book doesn't exist
         Book book = bookRepo.findById(id)
@@ -87,6 +87,9 @@ public class CatalogService {
         bookRepo.deleteById(id);
     }
 
+    public List<String> getAllGenres() {
+        return bookRepo.findAllDistinctGenres();
+    }
 
     //Helper method to convert Book entity to BookDto.
     //DTOs are used to control what data is exposed via the API.

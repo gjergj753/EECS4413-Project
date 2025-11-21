@@ -46,5 +46,5 @@ public class Response {
     private CartItemDto cartItem;
     private List<CartItemDto> cartItemList;
 
-
+    private List<String> genres;
 }

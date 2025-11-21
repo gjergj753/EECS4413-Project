@@ -7,13 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Repository interface for Book entity using Jpa
  */
 public interface BookRepo extends JpaRepository<Book, Long> {
-
 
     Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
@@ -36,4 +36,7 @@ public interface BookRepo extends JpaRepository<Book, Long> {
             Pageable pageable);
 
     Optional<Book> findByIsbn(String isbn);
+
+    @Query("SELECT DISTINCT g FROM Book b JOIN b.genres g ORDER BY g")
+    List<String> findAllDistinctGenres();
 }
