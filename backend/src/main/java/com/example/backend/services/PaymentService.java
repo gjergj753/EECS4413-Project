@@ -89,7 +89,13 @@ public class PaymentService {
         dto.setPaymentId(payment.getPaymentId());
         dto.setPaymentAmount(payment.getPaymentAmount());
         dto.setCreatedAt(payment.getCreatedAt());
-        // omit the full order object to keep the response smaller
+
+        if (payment.getPaymentMethod() != null) {
+            dto.setPaymentMethodId(payment.getPaymentMethod().getPaymentMethodId());
+        }
+        dto.setCardLast4(payment.getCardLast4());
+        dto.setCardBrand(payment.getCardBrand());
+
         return dto;
     }
 }

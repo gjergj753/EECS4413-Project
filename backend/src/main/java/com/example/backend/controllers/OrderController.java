@@ -1,5 +1,6 @@
 package com.example.backend.controllers;
 
+import com.example.backend.dto.CheckoutRequest;
 import com.example.backend.dto.Response;
 import com.example.backend.dto.OrderDto;
 import com.example.backend.services.OrderService;
@@ -49,6 +50,32 @@ public class OrderController {
                 .message("Order created successfully")
                 .order(order)
                 .build();
+    }
+
+    // Checkout with payment processing
+    @PostMapping("/checkout")
+    public Response checkout(@RequestBody CheckoutRequest request) {
+        try {
+            OrderDto order = orderService.checkout(request);
+            return Response.builder()
+                    .status(200)
+                    .message("Order placed successfully")
+                    .order(order)
+                    .build();
+        } catch (RuntimeException e) {
+            // Handle payment failure
+            if (e.getMessage().equals("Credit Card Authorization Failed")) {
+                return Response.builder()
+                        .status(402)
+                        .message("Credit Card Authorization Failed")
+                        .build();
+            }
+            // Other errors
+            return Response.builder()
+                    .status(400)
+                    .message(e.getMessage())
+                    .build();
+        }
     }
 
     // Update order status

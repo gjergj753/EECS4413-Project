@@ -39,6 +39,9 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Cart cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private java.util.List<PaymentMethod> paymentMethods = new java.util.ArrayList<>();
 /*
     // Getters and setters
     public Long getUserId() { return userId; }

@@ -70,6 +70,6 @@
    ```
 11. Verify Backend is Running properly:
    ```bash
-   curl http://localhost:3306/health
+   curl http://localhost:2424/health
    ```
    

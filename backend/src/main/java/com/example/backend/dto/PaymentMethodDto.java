@@ -1,14 +1,11 @@
 package com.example.backend.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,19 +13,17 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentDto {
-
-    private Long paymentId;
-
-    private BigDecimal paymentAmount;
-
-    private OrderDto order;
+public class PaymentMethodDto {
 
     private Long paymentMethodId;
-
+    private Long userId;
     private String cardLast4;
     private String cardBrand;
-
+    private String expiryMonth;
+    private String expiryYear;
+    private boolean isDefault;
     private LocalDateTime createdAt;
 
+    //paymentToken is not included for security
 }
+

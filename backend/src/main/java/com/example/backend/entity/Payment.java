@@ -21,6 +21,15 @@ public class Payment {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_method_id")
+    private PaymentMethod paymentMethod;
+
+    // Store card info snapshot at time of payment
+    private String cardLast4;
+    private String cardBrand;
+    private String paymentToken;
+
     @Column(name = "created_at")
     private final LocalDateTime createdAt = LocalDateTime.now();
 /*

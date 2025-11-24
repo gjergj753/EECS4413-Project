@@ -37,6 +37,9 @@ public class Response {
     private PaymentDto payment;
     private List<PaymentDto> paymentList;
 
+    private PaymentMethodDto paymentMethod;
+    private List<PaymentMethodDto> paymentMethodList;
+
     private OrderItemDto orderItem;
     private List<OrderItemDto> orderItemList;
 
