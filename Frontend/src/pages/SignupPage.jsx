@@ -13,15 +13,17 @@ import { useAuth } from "../context/AuthContext";
 
 export default function SignupPage() {
   const { register } = useAuth();
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirm: "",
-  }); 
-  
+  });
+
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -29,15 +31,30 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Reset error
+    setError("");
+
     if (form.password !== form.confirm) {
       setError("Passwords do not match");
       return;
     }
+
     try {
-      await register(form);
+      setLoading(true);
+
+      await register({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+      });
+
       navigate("/account");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,8 +65,8 @@ export default function SignupPage() {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "90vh",
-        ml: { sm: "240px" }, 
-        pt: { xs: "80px", sm: "64px" }, 
+        ml: { sm: "240px" },
+        pt: { xs: "80px", sm: "64px" },
         px: 2,
       }}
     >
@@ -80,6 +97,7 @@ export default function SignupPage() {
               required
               margin="normal"
             />
+
             <TextField
               name="lastName"
               label="Last Name"
@@ -89,6 +107,7 @@ export default function SignupPage() {
               required
               margin="normal"
             />
+
             <TextField
               name="email"
               label="Email"
@@ -98,6 +117,7 @@ export default function SignupPage() {
               required
               margin="normal"
             />
+
             <TextField
               name="password"
               label="Password"
@@ -108,6 +128,7 @@ export default function SignupPage() {
               required
               margin="normal"
             />
+
             <TextField
               name="confirm"
               label="Confirm Password"
@@ -123,9 +144,10 @@ export default function SignupPage() {
               variant="contained"
               type="submit"
               fullWidth
+              disabled={loading}
               sx={{ mt: 2, py: 1.2 }}
             >
-              Register
+              {loading ? "Creating Account..." : "Register"}
             </Button>
           </Box>
 
@@ -137,3 +159,4 @@ export default function SignupPage() {
     </Box>
   );
 }
+

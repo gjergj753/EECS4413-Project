@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { loginUser, registerUser } from "../api/authApi";
 
 const AuthContext = createContext();
 
@@ -8,73 +9,58 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
 
-
   const login = async (email, password) => {
-    // dummy authentication, replace with API call later
+  try {
+    const res = await loginUser(email, password);
 
-    // dummyadmin
-    if (email === "admin@bookstore.com" && password === "admin123") {
-      const dummyAdmin = {
-        firstName: "Admin",
-        lastName: "A",
-        email,
-        isAdmin: true,
-      };
-      setUser(dummyAdmin);
-      localStorage.setItem("user", JSON.stringify(dummyAdmin));
-      return { success: true };
-
-    // dummy customer
-    } else if (email === "johndoe@gmail.com" && password === "password") {
-      const dummyUser = {
-        firstName: "John",
-        lastName: "Doe",
-        email,
-        isAdmin: false,
-      };
-      setUser(dummyUser);
-      localStorage.setItem("user", JSON.stringify(dummyUser));
-      return { success: true };
-
-
-    } else {
-      throw new Error("Invalid email or password");
-    }
-  };
-
-
-  const register = async (formData) => {
-    // call backend
-    console.log("Registering user:", formData);
-    const dummyUser = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      isAdmin: false,
+    const loggedInUser = {
+      ...res.user,
+      email,
+      password,   // store raw password for now
     };
-    setUser(dummyUser);
-    localStorage.setItem("user", JSON.stringify(dummyUser));
+
+    setUser(loggedInUser);
+    localStorage.setItem("user", JSON.stringify(loggedInUser));
+
     return { success: true };
+  } catch (err) {
+    throw new Error(err.response?.data?.message || "Login failed");
+  }
+};
+
+const register = async (form) => {
+  const res = await registerUser(form);
+
+  if (!res.user) throw new Error("Registration failed");
+
+  const storedUser = {
+    ...res.user,
+    email: form.email,
+    password: form.password,   // store raw password here too
   };
+
+  setUser(storedUser);
+  localStorage.setItem("user", JSON.stringify(storedUser));
+
+  return storedUser;
+};
+
+
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
   };
 
-  const updateUser = (newData) => {
-  setUser(newData);
-  localStorage.setItem("user", JSON.stringify(newData));
-};
-
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, setUser: updateUser }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+
 export function useAuth() {
   return useContext(AuthContext);
 }
+
