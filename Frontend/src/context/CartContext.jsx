@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import {
     getCartByUserId,
+    createCart,
     addItemToCart,
     removeItemFromCart,
     updateCartItemQuantity,
@@ -11,6 +12,7 @@ import {
 const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
+// Generate temporary ID for guest cart items
 const generateId = () =>
     crypto?.randomUUID?.() || Math.floor(Math.random() * 1_000_000_000);
 
@@ -18,35 +20,51 @@ export function CartProvider({ children }) {
     const { user } = useAuth();
 
     const userId = user?.userId ?? null;
-    const authToken = user?.authToken ?? null; 
+    const authToken = user?.authToken ?? null;
 
     const [cartItems, setCartItems] = useState([]);
 
+    //----------------------------------------------------------
+    // LOAD CART (Backend if logged in, localStorage if guest)
+    //----------------------------------------------------------
     useEffect(() => {
-        if (userId && authToken) {
-            (async () => {
-                try {
-                    const res = await getCartByUserId(userId, authToken);
-                    const items = res?.cart?.cartItemList ?? [];
-                    setCartItems(items);
-                } catch (err) {
-                    console.error("Backend cart load failed:", err);
-                }
-            })();
-        } else {
+        if (!userId || !authToken) {
+            // Load guest cart
             const stored = localStorage.getItem("cart");
             const items = stored ? JSON.parse(stored) : [];
 
-            const normalized = items.map((i) => ({
-                cartItemId: i.cartItemId || generateId(),
-                book: i.book,
-                quantity: i.quantity,
-            }));
+            setCartItems(
+                items.map((i) => ({
+                    cartItemId: i.cartItemId || generateId(),
+                    book: i.book,
+                    quantity: i.quantity,
+                }))
+            );
 
-            setCartItems(normalized);
+            return;
         }
+
+        // Logged-in user → load backend cart
+        (async () => {
+            try {
+                const res = await getCartByUserId(userId, authToken);
+                setCartItems(res?.cart?.cartItemList ?? []);
+            } catch (err) {
+                console.warn("Cart not found → creating one automatically");
+
+                try {
+                    const created = await createCart(userId, authToken);
+                    setCartItems(created?.cart?.cartItemList ?? []);
+                } catch (innerErr) {
+                    console.error("Failed to create cart:", innerErr);
+                }
+            }
+        })();
     }, [userId, authToken]);
 
+    //----------------------------------------------------------
+    // Handle forced reload after login merge
+    //----------------------------------------------------------
     useEffect(() => {
         const flag = localStorage.getItem("forceReloadCart");
 
@@ -63,13 +81,18 @@ export function CartProvider({ children }) {
         }
     }, [userId, authToken]);
 
+    //----------------------------------------------------------
+    // Save guest cart to localStorage
+    //----------------------------------------------------------
     useEffect(() => {
         if (!userId) {
             localStorage.setItem("cart", JSON.stringify(cartItems));
         }
     }, [cartItems, userId]);
 
+    //----------------------------------------------------------
     // ADD TO CART
+    //----------------------------------------------------------
     const addToCart = async (book, qty = 1) => {
         if (userId && authToken) {
             const res = await addItemToCart(
@@ -80,7 +103,6 @@ export function CartProvider({ children }) {
             );
             setCartItems(res?.cart?.cartItemList ?? []);
         } else {
-            // Guest
             setCartItems((prev) => {
                 const existing = prev.find(
                     (i) => i.book.bookId === book.bookId
@@ -112,7 +134,9 @@ export function CartProvider({ children }) {
         }
     };
 
+    //----------------------------------------------------------
     // REMOVE ITEM
+    //----------------------------------------------------------
     const removeFromCart = async (bookId, cartItemId) => {
         if (userId && authToken) {
             const res = await removeItemFromCart(
@@ -128,7 +152,9 @@ export function CartProvider({ children }) {
         }
     };
 
+    //----------------------------------------------------------
     // INCREASE QUANTITY
+    //----------------------------------------------------------
     const increaseQty = async (bookId, cartItemId) => {
         const item = cartItems.find((i) => i.cartItemId === cartItemId);
         if (!item) return;
@@ -152,7 +178,9 @@ export function CartProvider({ children }) {
         }
     };
 
+    //----------------------------------------------------------
     // DECREASE QUANTITY
+    //----------------------------------------------------------
     const decreaseQty = async (bookId, cartItemId) => {
         const item = cartItems.find((i) => i.cartItemId === cartItemId);
         if (!item) return;
@@ -193,7 +221,9 @@ export function CartProvider({ children }) {
         }
     };
 
+    //----------------------------------------------------------
     // CLEAR CART
+    //----------------------------------------------------------
     const clearCart = async () => {
         if (userId && authToken) {
             const res = await apiClearCart(userId, authToken);
@@ -203,9 +233,15 @@ export function CartProvider({ children }) {
         }
     };
 
+    //----------------------------------------------------------
     // TOTALS
+    //----------------------------------------------------------
     const cartTotal = cartItems
-        .reduce((sum, item) => sum + (item.book.price ?? 0) * item.quantity, 0)
+        .reduce(
+            (sum, item) =>
+                sum + (item.book?.price ?? 0) * item.quantity,
+            0
+        )
         .toFixed(2);
 
     const cartCount = cartItems.reduce(
@@ -230,3 +266,4 @@ export function CartProvider({ children }) {
         </CartContext.Provider>
     );
 }
+

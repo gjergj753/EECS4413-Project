@@ -33,16 +33,14 @@ export default function LoginPage() {
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "90vh",
-        ml: { sm: "240px" }, // for navbar, change if that changes - also in SignupPage
-        pt: { xs: "80px", sm: "64px" }, 
-        px: 2,
-      }}
-    >
+  sx={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: "100vh",
+    px: 2,
+  }}
+>
       <Container maxWidth="xs">
         <Paper
           elevation={3}

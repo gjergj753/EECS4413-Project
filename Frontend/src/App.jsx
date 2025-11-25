@@ -29,35 +29,28 @@ function AppContent() {
 
   return (
     <>
-      {/* {
-      !isAuthPage && (
+
+      {/* show navbar always for now */}
+      {!isAuthPage && (
         <Navbar
           onLogout={logout}
           isLoggedIn={!!user}
           isAdmin={user?.isAdmin}
-          cartCount={cartCount}
         />
-      )} */}
-
-      {/* show navbar always for now */}
-      <Navbar
-        onLogout={logout}
-        isLoggedIn={!!user}
-        isAdmin={user?.isAdmin}
-      />
+      )}
 
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: !isAuthPage ? 3 : 0,
-          ml: !isAuthPage ? { sm: "240px" } : 0,
-          backgroundColor: isAuthPage ? "#ffffff" : "inherit",
+          width: "100vw",
           minHeight: "100vh",
+          backgroundColor: isAuthPage ? "#ffffff" : "inherit",
+          p: isAuthPage ? 0 : 3,
+          ml: isAuthPage ? 0 : { xs: "0px", sm: "240px" },
         }}
       >
-        {/* {!isAuthPage && <Toolbar />} */}
-        <Toolbar />
+        {!isAuthPage && <Toolbar />}
 
         {/* Define paths for pages */}
         <Routes>
@@ -67,7 +60,7 @@ function AppContent() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/sign-up" element={<SignupPage />} />
-          <Route path="/orders" element={<OrdersPage/>} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success/:orderId" element={<OrderSummaryPage />} />
@@ -76,7 +69,7 @@ function AppContent() {
           <Route path="/admin/inventory" element={<AdminInventoryPage />} />
           <Route path="/admin/sales" element={<AdminSalesPage />} />
           <Route path="/admin/customers" element={<AdminCustomersPage />} />
-          
+
 
 
 

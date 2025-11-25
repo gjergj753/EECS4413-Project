@@ -55,24 +55,51 @@ export function AuthProvider({ children }) {
   };
 
   // REGISTER
-  const register = async (form) => {
-    const res = await registerUser(form);
-
-    if (!res.user) throw new Error("Registration failed");
-
-    const authToken = btoa(`${form.email}:${form.password}`);
-
-    const storedUser = {
-      ...res.user,
+const register = async (form) => {
+  // Build backend payload
+  const requestBody = {
+    user: {
+      firstName: form.firstName,
+      lastName: form.lastName,
       email: form.email,
-      authToken,
-    };
-
-    setUser(storedUser);
-    localStorage.setItem("user", JSON.stringify(storedUser));
-
-    return storedUser;
+      hashedPassword: form.password,
+    },
+    address: {
+      street: form.street,
+      city: form.city,
+      province: form.province,
+      postalCode: form.postalCode,
+      country: form.country,
+    },
+    paymentMethod: {
+      cardHolderName: form.cardHolderName,     // <-- user typed
+      cardNumber: form.cardNumber,
+      expiryMonth: Number(form.expiryMonth),
+      expiryYear: Number(form.expiryYear),
+      cvv: form.cvv,
+    },
   };
+  console.log("REGISTER USER API CALL BODY:", requestBody);
+  // call backend
+  const res = await registerUser(requestBody);
+
+  if (!res.user) throw new Error("Registration failed");
+
+  // create token for persistence
+  const authToken = btoa(`${form.email}:${form.password}`);
+
+  const storedUser = {
+    ...res.user,
+    email: form.email,
+    authToken,
+  };
+
+  setUser(storedUser);
+  localStorage.setItem("user", JSON.stringify(storedUser));
+
+  return storedUser;
+};
+
 
   // LOGOUT
   const logout = () => {

@@ -16,7 +16,6 @@ export default function OrdersPage() {
   return (
     <Box
       sx={{
-        ml: { sm: "240px" },            // match sidebar
         display: "flex",
         justifyContent: "center",
         width: "100%",
