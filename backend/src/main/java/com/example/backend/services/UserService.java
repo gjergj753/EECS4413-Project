@@ -97,4 +97,34 @@ public class UserService {
 
         return convertToDto(user);
     }
+
+    // Admin updates user info
+    public UserDto updateUserInfo(Long userId, UserDto userDto) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        // Update fields if provided
+        if (userDto.getEmail() != null) user.setEmail(userDto.getEmail());
+        if (userDto.getFirstName() != null) user.setFirstName(userDto.getFirstName());
+        if (userDto.getLastName() != null) user.setLastName(userDto.getLastName());
+
+        // Admin can set admin/non admin  users
+        user.setAdmin(userDto.isAdmin());
+
+        User updatedUser = userRepo.save(user);
+        return convertToDto(updatedUser);
+    }
+
+    // Admin resets user password
+    public void updateUserPassword(Long userId, String newPassword) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
+
+        user.setHashedPassword(newPassword);
+        userRepo.save(user);
+    }
 }

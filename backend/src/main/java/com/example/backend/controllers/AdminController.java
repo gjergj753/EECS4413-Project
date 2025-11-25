@@ -13,7 +13,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -69,6 +68,52 @@ public class AdminController {
                 .build();
     }
 
+    // View customer account with complete purchase history
+    @GetMapping("/customers/{userId}")
+    public Response getCustomerAccountWithHistory(@PathVariable Long userId) {
+        UserDto user = userService.getUserById(userId);
+        // Get customer's complete order history
+        Page<OrderDto> orders = orderService.getSalesHistory(0, 100, userId, null, null, null);
 
+        return Response.builder()
+                .status(200)
+                .message("Customer account with purchase history retrieved successfully")
+                .user(user)
+                .orderList(orders.getContent())
+                .totalElements(orders.getTotalElements())
+                .build();
+    }
+
+    // Update customer basic info (admin can change admin status)
+    @PutMapping("/users/{userId}")
+    public Response updateUserInfo(@PathVariable Long userId, @RequestBody UserDto userDto) {
+        UserDto updatedUser = userService.updateUserInfo(userId, userDto);
+        return Response.builder()
+                .status(200)
+                .message("User information updated successfully")
+                .user(updatedUser)
+                .build();
+    }
+
+    // Reset customer password (separate endpoint for security)
+    @PatchMapping("/users/{userId}/password")
+    public Response updateUserPassword(@PathVariable Long userId, @RequestBody String newPassword) {
+        userService.updateUserPassword(userId, newPassword);
+        return Response.builder()
+                .status(200)
+                .message("User password updated successfully")
+                .build();
+    }
+
+    // Update book inventory quantity
+    @PatchMapping("/books/{bookId}/stock")
+    public Response updateBookStock(@PathVariable Long bookId, @RequestParam int quantity) {
+        BookDto updatedBook = catalogService.updateBookStock(bookId, quantity);
+        return Response.builder()
+                .status(200)
+                .message("Book stock updated successfully")
+                .book(updatedBook)
+                .build();
+    }
 
 }

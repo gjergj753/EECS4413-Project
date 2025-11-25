@@ -95,6 +95,20 @@ public class CatalogService {
         return bookRepo.findAllDistinctGenres();
     }
 
+    // Admin updates book stock quantity
+    public BookDto updateBookStock(Long bookId, int quantity) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bookId));
+
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+
+        book.setQuantity(quantity);
+        Book updatedBook = bookRepo.save(book);
+        return convertToDto(updatedBook);
+    }
+
     //Helper method to convert Book entity to BookDto.
     //DTOs are used to control what data is exposed via the API.
     private BookDto convertToDto(Book book) {
