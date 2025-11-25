@@ -1,10 +1,8 @@
 package com.example.backend.controllers;
 
-import com.example.backend.dto.LoginRequest;
-import com.example.backend.dto.Response;
-import com.example.backend.dto.UserDto;
-import com.example.backend.entity.User;
-import com.example.backend.repository.UserRepo;
+import com.example.backend.dto.*;
+import com.example.backend.services.AddressService;
+import com.example.backend.services.PaymentMethodService;
 import com.example.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,16 +18,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final UserService userService;
+    private final AddressService addressService;
+    private final PaymentMethodService paymentMethodService;
 
     @PostMapping("/register")
-    public ResponseEntity<Response> registerUser(@RequestBody UserDto registrationRequest){
+    public ResponseEntity<Response> registerUser(@RequestBody RegisterRequest request){
 
-        UserDto registeredUser = userService.createUser(registrationRequest);
+        UserDto registeredUser = userService.createUser(request.getUser());
+        AddressDto registeredAddress = addressService.createAddress(registeredUser.getUserId(), request.getAddress());
+
+        Response paymentResponse = paymentMethodService.addPaymentMethod(registeredUser.getUserId(), request.getPaymentMethod());
+        PaymentMethodDto registeredPaymentMethod = paymentResponse.getPaymentMethod();
+
 
         Response response = Response.builder()
                 .status(201)
                 .message("User registered successfully")
                 .user(registeredUser)
+                .address(registeredAddress)
+                .paymentMethod(registeredPaymentMethod)
                 .build();
 
         return ResponseEntity.ok(response);

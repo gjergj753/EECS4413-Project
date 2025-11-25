@@ -37,4 +37,7 @@ public class UserDto {
     @JsonManagedReference("user-cart")
     private CartDto cart;
 
+    @JsonManagedReference("user-payment-method")
+    private PaymentMethodDto paymentMethod;
+
 }

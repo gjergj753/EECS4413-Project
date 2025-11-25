@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "users")
@@ -41,7 +44,7 @@ public class User {
     private Cart cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private java.util.List<PaymentMethod> paymentMethods = new java.util.ArrayList<>();
+    private List<PaymentMethod> paymentMethods = new ArrayList<>();
 /*
     // Getters and setters
     public Long getUserId() { return userId; }

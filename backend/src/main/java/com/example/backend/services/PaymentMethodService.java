@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaymentMethodService {
 
     private final PaymentMethodRepository paymentMethodRepository;
@@ -33,7 +34,7 @@ public class PaymentMethodService {
                 .build();
     }
 
-    @Transactional
+
     public Response addPaymentMethod(Long userId, PaymentMethodDto dto) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
@@ -61,7 +62,7 @@ public class PaymentMethodService {
                 .build();
     }
 
-    @Transactional
+
     public Response setDefaultPaymentMethod(Long userId, Long paymentMethodId) {
         PaymentMethod method = paymentMethodRepository
                 .findByPaymentMethodIdAndUser_UserId(paymentMethodId, userId)
@@ -86,7 +87,7 @@ public class PaymentMethodService {
                 .build();
     }
 
-    @Transactional
+
     public Response deletePaymentMethod(Long userId, Long paymentMethodId) {
         PaymentMethod method = paymentMethodRepository
                 .findByPaymentMethodIdAndUser_UserId(paymentMethodId, userId)
