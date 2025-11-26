@@ -16,10 +16,11 @@ export default function OrdersPage() {
   return (
     <Box
       sx={{
+        ml: { sm: "240px" },            // match sidebar
         display: "flex",
         justifyContent: "center",
         width: "100%",
-        px: { xs: 2, md: 5 },
+           px: { xs: 5, md: 20, lg: 35 },
         py: 4,
       }}
     >

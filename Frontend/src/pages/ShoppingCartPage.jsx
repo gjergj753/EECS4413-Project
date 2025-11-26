@@ -45,7 +45,7 @@ export default function ShoppingCartPage() {
                 display: "flex",
                 justifyContent: "center",
                 width: "100%",
-                px: { xs: 2, md: 6 },
+                px: { xs: 2, md: 30, lg: 50 },
                 py: 4,
             }}
         >

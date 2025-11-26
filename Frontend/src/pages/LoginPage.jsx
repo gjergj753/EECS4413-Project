@@ -32,13 +32,15 @@ export default function LoginPage() {
   };
 
   return (
-    <Box
+<Box
   sx={{
+    minHeight: "100vh",
+    width: "100vw",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "100vh",
-    px: 2,
+    backgroundColor: "#fafafa",
+    overflowX: "hidden" 
   }}
 >
       <Container maxWidth="xs">

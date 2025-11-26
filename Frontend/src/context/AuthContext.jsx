@@ -4,6 +4,17 @@ import { addItemToCart } from "../api/cartApi";
 
 const AuthContext = createContext();
 
+function detectCardBrand(number) {
+  if (!number) return "Unknown";
+
+  if (/^4/.test(number)) return "Visa";
+  if (/^5[1-5]/.test(number)) return "MasterCard";
+  if (/^3[47]/.test(number)) return "American Express";
+  if (/^6(?:011|5)/.test(number)) return "Discover";
+
+  return "Unknown";
+}
+
 export function AuthProvider({ children }) {
   // Load stored user
   const [user, setUser] = useState(() => {
@@ -56,6 +67,10 @@ export function AuthProvider({ children }) {
 
   // REGISTER
 const register = async (form) => {
+
+  const cardBrand = detectCardBrand(form.cardNumber);
+  const last4 = form.cardNumber.slice(-4);
+
   // Build backend payload
   const requestBody = {
     user: {
@@ -72,11 +87,11 @@ const register = async (form) => {
       country: form.country,
     },
     paymentMethod: {
-      cardHolderName: form.cardHolderName,     // <-- user typed
-      cardNumber: form.cardNumber,
-      expiryMonth: Number(form.expiryMonth),
-      expiryYear: Number(form.expiryYear),
-      cvv: form.cvv,
+      cardLast4: last4,
+      cardBrand: cardBrand,
+      expiryMonth: form.expiryMonth,
+      expiryYear: form.expiryYear,
+      isDefault: true
     },
   };
   console.log("REGISTER USER API CALL BODY:", requestBody);
@@ -108,12 +123,28 @@ const register = async (form) => {
     localStorage.removeItem("sessionToken");
   };
 
+// UPDATE PASSWORD LOCALLY AFTER SAVING
+const updatePasswordInContext = (newPassword) => {
+  // rebuild Basic Auth token
+  const newToken = btoa(`${user.email}:${newPassword}`);
+
+  const updatedUser = {
+    ...user,
+    authToken: newToken,
+  };
+
+  setUser(updatedUser);
+  localStorage.setItem("user", JSON.stringify(updatedUser));
+};
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout,   setUser,
+  updatePasswordInContext }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuth() {
   return useContext(AuthContext);

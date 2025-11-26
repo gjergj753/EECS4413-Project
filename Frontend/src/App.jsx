@@ -43,11 +43,10 @@ function AppContent() {
         component="main"
         sx={{
           flexGrow: 1,
-          width: "100vw",
-          minHeight: "100vh",
-          backgroundColor: isAuthPage ? "#ffffff" : "inherit",
           p: isAuthPage ? 0 : 3,
           ml: isAuthPage ? 0 : { xs: "0px", sm: "240px" },
+          backgroundColor: isAuthPage ? "#ffffff" : "inherit",
+          minHeight: "100vh",
         }}
       >
         {!isAuthPage && <Toolbar />}
