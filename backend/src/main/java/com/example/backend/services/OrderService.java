@@ -56,6 +56,16 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<OrderDto> getUserOrders(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        Page<Order> orders = orderRepo.findByUser_UserId(userId, Pageable.unpaged());
+        return orders.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
     // Get specific order by ID
     public OrderDto getOrderById(Long id) {
         Order order = orderRepo.findById(id)

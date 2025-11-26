@@ -28,6 +28,16 @@ public class AdminController {
         return "OK";
     }
 
+    @GetMapping("/orders/all")
+    public Response getAllOrders() {
+        List<OrderDto> orders = orderService.getAllOrders();
+        return Response.builder()
+                .status(200)
+                .message("All orders retrieved successfully")
+                .orderList(orders)
+                .build();
+    }
+
     @GetMapping("/orders")
     public Response getSalesHistory(
             @RequestParam(defaultValue = "0") int page,

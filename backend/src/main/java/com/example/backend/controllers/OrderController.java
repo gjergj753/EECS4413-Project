@@ -19,13 +19,13 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // Get all orders (admin function)
-    @GetMapping
-    public Response getAllOrders() {
-        List<OrderDto> orders = orderService.getAllOrders();
+    // Get orders for by userId ( non admin users can only see their own orders)
+    @GetMapping("/user/{userId}")
+    public Response getUserOrders(@PathVariable Long userId) {
+        List<OrderDto> orders = orderService.getUserOrders(userId);
         return Response.builder()
                 .status(200)
-                .message("Orders retrieved successfully")
+                .message("User orders retrieved successfully")
                 .orderList(orders)
                 .build();
     }
