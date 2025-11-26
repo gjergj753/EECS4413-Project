@@ -40,6 +40,17 @@ public class AddressController {
                 .build();
     }
 
+    // Get address by UserId
+    @GetMapping("/user/{userId}")
+    public Response getAddressByUserId(@PathVariable Long userId){
+        AddressDto address = addressService.getAddressByUserId(userId);
+        return Response.builder()
+                .status(200)
+                .message("Address found")
+                .address(address)
+                .build();
+    }
+
     // Create new address for user
     @PostMapping("/user/{userId}")
     public Response createAddress(

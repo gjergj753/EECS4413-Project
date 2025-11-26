@@ -1,6 +1,7 @@
 package com.example.backend.services;
 
 import com.example.backend.dto.AddressDto;
+import com.example.backend.dto.UserDto;
 import com.example.backend.entity.Address;
 import com.example.backend.entity.User;
 import com.example.backend.repository.AddressRepo;
@@ -35,6 +36,11 @@ public class AddressService {
     public AddressDto getAddressById(Long id) {
         Address address = addressRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Address not found with id: " + id));
+        return convertToDto(address);
+    }
+
+    public AddressDto getAddressByUserId(Long userId){
+        Address address = addressRepo.findAddressByUser_UserId(userId).orElseThrow(() -> new RuntimeException("Address not found for user: " + userId));
         return convertToDto(address);
     }
 
