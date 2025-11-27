@@ -1,9 +1,6 @@
 package com.example.backend.services;
 
-import com.example.backend.dto.CheckoutRequest;
-import com.example.backend.dto.OrderDto;
-import com.example.backend.dto.OrderItemDto;
-import com.example.backend.dto.BookDto;
+import com.example.backend.dto.*;
 import com.example.backend.entity.*;
 import com.example.backend.repository.*;
 import org.springframework.data.domain.Page;
@@ -320,6 +317,10 @@ public class OrderService {
         dto.setStatus(order.getStatus());
         dto.setCreatedAt(order.getCreatedAt());
 
+        if (order.getUser() != null) {
+            dto.setUser(convertUserToDto(order.getUser()));
+        }
+
         // Convert order items without circular references
         if (order.getOrderItemList() != null) {
             dto.setOrderItemList(order.getOrderItemList().stream()
@@ -358,6 +359,17 @@ public class OrderService {
         dto.setQuantity(book.getQuantity());
         dto.setYear(book.getYear());
         dto.setGenres(book.getGenres());
+        return dto;
+    }
+
+    private UserDto convertUserToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setUserId(user.getUserId());
+        dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setAdmin(user.isAdmin());
+        // Don't set password for security
         return dto;
     }
 }

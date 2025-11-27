@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -57,6 +58,32 @@ public class AdminController {
                 .totalPage(ordersPage.getTotalPages())
                 .totalElements(ordersPage.getTotalElements())
                 .build();
+    }
+
+    @GetMapping("/orders/{orderId}/user")
+    public Response getUserFromOrder(@PathVariable Long orderId) {
+        try {
+            OrderDto order = orderService.getOrderById(orderId);
+            UserDto user = order.getUser();
+
+            if (user == null) {
+                return Response.builder()
+                        .status(404)
+                        .message("User not found for order id: " + orderId)
+                        .build();
+            }
+
+            return Response.builder()
+                    .status(200)
+                    .message("User retrieved successfully from order")
+                    .user(user)
+                    .build();
+        } catch (RuntimeException e) {
+            return Response.builder()
+                    .status(404)
+                    .message("Order not found with id: " + orderId)
+                    .build();
+        }
     }
 
     @PostMapping("/create/book")
