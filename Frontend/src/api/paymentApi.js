@@ -25,10 +25,20 @@ export function deletePaymentMethod(paymentId, userId, token) {
     .then(res => res.data);
 }
 
+
 export function getUserDefaultPaymentMethod(userId, token) {
   return axios
     .get(`${API_BASE_URL}/payment-methods/user/${userId}/default`, {
       headers: { Authorization: `Basic ${token}` },
     })
     .then((res) => res.data.paymentMethod);
+} 
+
+export function setUserDefaultPaymentMethod(paymentMethodId, userId, token) {
+  return axios
+    .patch(
+      `${API_BASE_URL}/payment-methods/${paymentMethodId}/default?userId=${userId}`, null, { 
+        headers: { Authorization: `Basic ${token}` }, 
+    })
+    .then(res => res.data);
 }

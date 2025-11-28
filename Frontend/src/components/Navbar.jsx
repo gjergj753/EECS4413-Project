@@ -19,21 +19,29 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import GroupIcon from '@mui/icons-material/Group';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext"; 
 import { getGenres } from "../api/catalogAPI";
 import { useAuth } from "../context/AuthContext";
 const drawerWidth = 240;
 
+const drawerWidth = 240;
 
-export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }) {
+export default function Navbar() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [genres, setGenres] = React.useState([]);
   const [openGenres, setOpenGenres] = React.useState(false);
+
   const { cartCount } = useCart();
+  const { user, logout } = useAuth();                
   const navigate = useNavigate();
   const { user } =useAuth();
   const location = useLocation();
+
+  const isLoggedIn = !!user;
+  const isAdmin = user?.admin === true;             
 
   useEffect(() => {
     getGenres().then(data => {
@@ -42,9 +50,13 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
   }, []);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+
   const handleLogoutClick = () => {
     const confirmed = window.confirm("Are you sure you want to log out?");
-    if (confirmed && onLogout) onLogout(); navigate("/");
+    if (confirmed) {
+      logout();                                      
+      navigate("/");
+    }
   };
 
   const drawerContent = (
@@ -55,7 +67,10 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
       <Divider />
 
       <List>
-        <ListItemButton selected={location.pathname === '/'} onClick={() => navigate('/', { state: { reset: true } })}>
+        <ListItemButton
+          selected={location.pathname === '/'}
+          onClick={() => navigate('/', { state: { reset: true } })}
+        >
           <ListItemIcon><HomeIcon /></ListItemIcon>
           <ListItemText primary="Home" />
         </ListItemButton>
@@ -81,7 +96,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
           </List>
         </Collapse>
 
-        {/* Account section */}
+        {/* ACCOUNT SECTION */}
         {isLoggedIn ? (
           <>
             <ListItemButton onClick={() => navigate('/account')}>
@@ -101,7 +116,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
           </ListItemButton>
         )}
 
-        {/* Cart */}
+        {/* CART */}
         <ListItemButton onClick={() => navigate('/cart')}>
           <ListItemIcon>
             <Badge badgeContent={cartCount} color="secondary">
@@ -113,12 +128,13 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
 
         <Divider sx={{ my: 1 }} />
 
-        {/* Admin-only section */}
+        {/* ADMIN-ONLY SECTION */}
         {isAdmin && (
           <>
             <Typography variant="subtitle2" sx={{ px: 2, mt: 1, fontWeight: 500 }}>
               Admin
             </Typography>
+
             <ListItemButton onClick={() => navigate('/admin/inventory')}>
               <ListItemIcon><AdminPanelSettingsIcon /></ListItemIcon>
               <ListItemText primary="Maintain Inventory" />
@@ -189,7 +205,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
   </Toolbar>
 </AppBar>
 
-      {/* Mobile Drawer */}
+      {/* MOBILE DRAWER */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -203,7 +219,7 @@ export default function Navbar({ isAdmin = false, isLoggedIn = false, onLogout }
         {drawerContent}
       </Drawer>
 
-      {/* Desktop Drawer */}
+      {/* DESKTOP DRAWER */}
       <Drawer
         variant="permanent"
         sx={{

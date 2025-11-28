@@ -1,36 +1,51 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Divider
+  Box, Typography, Paper, Button, Dialog, DialogTitle, DialogContent,
+  DialogActions, TextField, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Alert, Snackbar
 } from "@mui/material";
-import { dummyCustomers } from "../data/dummyCustomers"; 
-import { mockOrders } from "../data/orders";
+import { primaryButton, secondaryButton, errorButton } from "../utils/buttonStyles";
+import { useAuth } from "../context/AuthContext";
+import { getAllCustomers, getCustomerHistory } from "../api/adminApi";
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState(dummyCustomers);
-  const orders = mockOrders;
-  const [filters, setFilters] = useState({ id: "", name: "", email: "" });
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [editData, setEditData] = useState({ firstName: "", lastName: "", email: "", address: "", creditCard: "" });
+  const { user } = useAuth();
+  const authToken = user?.authToken;
+  const navigate = useNavigate();
 
+  const [customers, setCustomers] = useState([]);
+  const [filters, setFilters] = useState({ id: "", name: "", email: "" });
+  const [purchaseHistory, setPurchaseHistory] = useState(null);
+
+  const [alert, setAlert] = useState({ open: false, severity: "success", message: "" });
+
+  // ---------------- LOAD CUSTOMERS ----------------
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await getAllCustomers();
+        setCustomers(res.userList || res || []);
+      } catch (err) {
+        console.error("Failed to load customers", err);
+        showAlert("error", "Failed to load customers");
+      }
+    }
+    load();
+  }, []);
+
+  // ---------------- ALERT HANDLERS ----------------
+  const showAlert = (severity, message) => {
+    setAlert({ open: true, severity, message });
+  };
+
+  const closeAlert = () => {
+    setAlert({ open: false, severity: "success", message: "" });
+  };
 
   // ---------------- FILTERING ----------------
   const filteredCustomers = useMemo(() => {
-    return customers.filter(c => {
+    return customers.filter((c) => {
       const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
       if (filters.id && !c.userId.toString().includes(filters.id)) return false;
       if (filters.name && !fullName.includes(filters.name.toLowerCase())) return false;
@@ -39,103 +54,76 @@ export default function AdminCustomersPage() {
     });
   }, [customers, filters]);
 
-  // ---------------- SAVE CHANGES ----------------
-  const handleSave = () => {
-    setCustomers(prev => prev.map(c => c.userId === selectedCustomer.userId ? { ...c, ...editData } : c));
-    setSelectedCustomer(null);
+  // ---------------- LOAD PURCHASE HISTORY ----------------
+  const openPurchaseHistory = async (customer) => {
+    try {
+      const data = await getCustomerHistory(authToken, customer.userId);
+      setPurchaseHistory(data);
+    } catch (err) {
+      console.error("Failed to load purchase history", err);
+      setPurchaseHistory({ orderList: [] });
+      showAlert("error", "Failed to load purchase history");
+    }
   };
 
-
+  // ---------------- NAVIGATE TO SPECIFIED ORDER IN ADMINSALESPAGE ----------------
+  const goToOrder = (orderId) => {
+    setPurchaseHistory(null);
+    navigate(`/admin/sales?orderId=${orderId}`);
+  };
 
   return (
-    // <Box sx={{ ml: 0, px: { xs: 2, md: 5 }, py: 4 }}>
-        <Box sx={{
-            ml: 0,
-            width: "100%",
-            maxWidth: "100%",   // allow full width
-            px: { xs: 2, md: 4 },
-            py: 4,
-            boxSizing: "border-box"
-            }}>
+    <Box sx={{ ml: 0, width: "100%", px: { xs: 2, md: 4 }, py: 4 }}>
       <Typography variant="h4" sx={{ mb: 4, fontWeight: "bold", textAlign: "center" }}>
         Manage Customers
       </Typography>
 
-      {/* FILTER SECTION */}
+      {/* FILTERS */}
       <Paper sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>Filter By</Typography>
-        {/* <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: 2 }}> */}
-            <Box sx={{
-  display: "grid",
-  gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
-  gap: 2,
-  width: "100%",
-  boxSizing: "border-box"
-}}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
+          Filter By
+        </Typography>
 
-          <TextField fullWidth label="Customer ID" value={filters.id} onChange={e => setFilters({...filters, id: e.target.value})} />
-          <TextField fullWidth label="Name" value={filters.name} onChange={e => setFilters({...filters, name: e.target.value})} />
-          <TextField fullWidth label="Email" value={filters.email} onChange={e => setFilters({...filters, email: e.target.value})} />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
+          <TextField label="Customer ID" fullWidth value={filters.id} onChange={(e) => setFilters({ ...filters, id: e.target.value })} />
+          <TextField label="Name" fullWidth value={filters.name} onChange={(e) => setFilters({ ...filters, name: e.target.value })} />
+          <TextField label="Email" fullWidth value={filters.email} onChange={(e) => setFilters({ ...filters, email: e.target.value })} />
         </Box>
       </Paper>
 
-      {/* CUSTOMER TABLE */}
-      {/* <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
-        <Table> */}
-            <TableContainer component={Paper} sx={{ borderRadius: 3, overflowX: "auto" }}>
-  <Table sx={{ minWidth: 650 }}> {/* optional: min width */}
-
+      {/* CUSTOMERS TABLE */}
+      <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ backgroundColor: "#f3f3f3" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Customer ID</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
               <TableCell></TableCell>
-              <TableCell></TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {filteredCustomers.map(c => (
+            {filteredCustomers.map((c) => (
               <TableRow key={c.userId}>
                 <TableCell>{c.userId}</TableCell>
                 <TableCell>{c.firstName} {c.lastName}</TableCell>
                 <TableCell>{c.email}</TableCell>
+
                 <TableCell>
-                  <Button
-                    variant="outlined"
-                    sx={{ borderRadius: "20px", textTransform: "none", px: 3, fontWeight: "bold" }}
-                    onClick={() => {
-                      setSelectedCustomer(c);
-                      setEditData({
-                        firstName: c.firstName,
-                        lastName: c.lastName,
-                        email: c.email,
-                        address: c.address || "",
-                        creditCard: c.creditCard || ""
-                      });
-                    }}
+                  <Button 
+                    variant="outlined" 
+                    sx={secondaryButton} 
+                    onClick={() => navigate(`/admin/customers/${c.userId}/edit`)} //go to AdminEditCustomerPage
                   >
                     Edit
                   </Button>
-                </TableCell>
-                <TableCell>
-                     <Button
-                        variant="outlined"
-                        onClick={() => setSelectedOrder(null)}
-                        sx={{
-                        borderRadius: "20px",
-                        textTransform: "none",
-                        px: 3,
-                        fontWeight: "bold",
-                        "&:hover": { transform: "scale(1.04)" }
-                        }}
-                    >
-                        Purchase History
-                    </Button>
- 
+                  &nbsp;
+                  <Button variant="outlined" sx={secondaryButton} onClick={() => openPurchaseHistory(c)}>Purchase History</Button>
                 </TableCell>
               </TableRow>
             ))}
+
             {filteredCustomers.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} sx={{ textAlign: "center", color: "gray" }}>
@@ -147,74 +135,54 @@ export default function AdminCustomersPage() {
         </Table>
       </TableContainer>
 
+      {/* ------------ PURCHASE HISTORY MODAL ------------ */}
+      {purchaseHistory && (
+        <Dialog open={true} onClose={() => setPurchaseHistory(null)} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ fontWeight: "bold" }}>
+            Purchase History - Customer #{purchaseHistory.user?.userId}: {purchaseHistory.user?.firstName} {purchaseHistory.user?.lastName}
+          </DialogTitle>
 
-
-      {/* EDIT CUSTOMER MODAL */}
-      {selectedCustomer && (
-        <Dialog open={true} onClose={() => setSelectedCustomer(null)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ fontWeight: "bold" }}>Editing Customer ... {selectedCustomer.firstName} {selectedCustomer.lastName}</DialogTitle>
           <DialogContent dividers>
-            <TextField
-              label="First Name"
-              fullWidth
-              sx={{ mb: 2 }}
-              value={editData.firstName}
-              onChange={e => setEditData({...editData, firstName: e.target.value})}
-            />
-            <TextField
-              label="Last Name"
-              fullWidth
-              sx={{ mb: 2 }}
-              value={editData.lastName}
-              onChange={e => setEditData({...editData, lastName: e.target.value})}
-            />
-            <TextField
-              label="Email"
-              fullWidth
-              sx={{ mb: 2 }}
-              value={editData.email}
-              onChange={e => setEditData({...editData, email: e.target.value})}
-            />
-            <TextField
-              label="Address"
-              fullWidth
-              sx={{ mb: 2 }}
-              value={editData.address}
-              onChange={e => setEditData({...editData, address: e.target.value})}
-            />
-            <TextField
-              label="Credit Card"
-              fullWidth
-              value={editData.creditCard}
-              onChange={e => setEditData({...editData, creditCard: e.target.value})}
-            />
+            {(!purchaseHistory.orderList || purchaseHistory.orderList.length === 0) ? (
+              <Typography>No orders found for this customer.</Typography>
+            ) : (
+              purchaseHistory.orderList.map((o) => (
+                <Paper key={o.orderId} sx={{ p: 2, mb: 2 }}>
+                  <Typography><b>Order ID:</b> {o.orderId}</Typography>
+                  <Typography><b>Total Price:</b> ${Number(o.totalPrice).toFixed(2)}</Typography>
+                  <Typography><b>Status:</b> {o.status}</Typography>
+                  <Typography><b>Date:</b> {new Date(o.createdAt).toLocaleString()}</Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Button 
+                      variant="outlined" 
+                      sx={secondaryButton} 
+                      onClick={() => goToOrder(o.orderId)}
+                    >
+                      Go to Order
+                    </Button>
+                  </Box>
+                </Paper>
+              ))
+            )}
           </DialogContent>
+
           <DialogActions>
-             <Button
-                variant="outlined"
-                onClick={() => setSelectedCustomer(null)}
-                sx={{
-                borderRadius: "20px",
-                textTransform: "none",
-                px: 3,
-                fontWeight: "bold",
-                "&:hover": { transform: "scale(1.04)" }
-                }}
-            >
-                Cancel
-            </Button>
-            <Button
-              variant="contained"
-              sx={{ backgroundColor: "#3f51b5", borderRadius: "20px", "&:hover": { backgroundColor: "#303f9f", transform: "scale(1.04)" } }}
-              onClick={handleSave}
-            >
-              Save
-            </Button>
+            <Button variant="outlined" sx={secondaryButton} onClick={() => setPurchaseHistory(null)}>Close</Button>
           </DialogActions>
         </Dialog>
       )}
 
-      
+      {/* ------------ UNIFIED ALERT SNACKBAR ------------ */}
+      <Snackbar 
+        open={alert.open} 
+        autoHideDuration={6000} 
+        onClose={closeAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={closeAlert} severity={alert.severity} sx={{ width: '100%' }}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
