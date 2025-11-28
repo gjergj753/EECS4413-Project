@@ -398,7 +398,7 @@ export default function AdminEditCustomerPage() {
       </Paper>
 
       <Box sx={{ mt: 4 }}>
-       <Button onClick={handleDeleteUser} variant="contained" sx={errorButton} >Delete User</Button>
+       <Button onClick={handleDeleteUser} variant="contained" sx={errorButton} >Delete Customer</Button>
       </Box>
 
       {/* ------------ PASSWORD CHANGE MODAL ------------ */}
