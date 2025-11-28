@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import BookDetailsPage from "./pages/BookDetails";
@@ -12,9 +12,11 @@ import ShoppingCartPage from "./pages/ShoppingCartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSummaryPage from "./pages/OrderSummaryPage";
 import OrdersPage from "./pages/OrdersPage";
+import AdminRoute from "./components/AdminRoute";
 import AdminSalesPage from "./pages/AdminSalesPage";
 import AdminInventoryPage from "./pages/AdminInventoryPage";
 import AdminCustomersPage from "./pages/AdminCustomersPage";
+import AdminEditCustomerPage from "./pages/AdminEditCustomerPage";
 
 
 function AppContent() {
@@ -30,7 +32,6 @@ function AppContent() {
   return (
     <>
 
-      {/* show navbar always for now */}
       {!isAuthPage && (
         <Navbar
           onLogout={logout}
@@ -52,7 +53,7 @@ function AppContent() {
       >
         {!isAuthPage && <Toolbar />}
 
-        {/* Define paths for pages */}
+        {/* Non-admin routes */}
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/books" element={<HomePage />} />
@@ -65,13 +66,32 @@ function AppContent() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success/:orderId" element={<OrderSummaryPage />} />
 
+        {/* Admin routes */}  
+          <Route path="/admin" element={<Navigate to="/admin/sales" replace />}/>
+          <Route path="/admin/inventory"
+            element={
+              <AdminRoute>
+                <AdminInventoryPage />
+              </AdminRoute>
+            }
+          />
 
-          <Route path="/admin/inventory" element={<AdminInventoryPage />} />
-          <Route path="/admin/sales" element={<AdminSalesPage />} />
-          <Route path="/admin/customers" element={<AdminCustomersPage />} />
+        <Route path="/admin/sales"
+          element={
+            <AdminRoute>
+              <AdminSalesPage />
+            </AdminRoute>
+          }
+        />
 
-
-
+        <Route path="/admin/customers"
+          element={
+            <AdminRoute>
+              <AdminCustomersPage />
+            </AdminRoute>
+          }
+        />
+        <Route path="/admin/customers/:userId/edit" element={<AdminEditCustomerPage />} />
 
         </Routes>
       </Box>
