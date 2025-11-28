@@ -22,11 +22,8 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext"; 
 import { getGenres } from "../api/catalogAPI";
 import { useAuth } from "../context/AuthContext";
-const drawerWidth = 240;
-
 const drawerWidth = 240;
 
 export default function Navbar() {
@@ -37,7 +34,6 @@ export default function Navbar() {
   const { cartCount } = useCart();
   const { user, logout } = useAuth();                
   const navigate = useNavigate();
-  const { user } =useAuth();
   const location = useLocation();
 
   const isLoggedIn = !!user;
