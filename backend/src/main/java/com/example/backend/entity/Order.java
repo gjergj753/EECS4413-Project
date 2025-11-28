@@ -31,6 +31,13 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Payment payment;
 
+    // Shipping address snapshot at time of order
+    private String shippingStreet;
+    private String shippingCity;
+    private String shippingProvince;
+    private String shippingPostalCode;
+    private String shippingCountry;
+
     @Column(name = "created_at")
     private final LocalDateTime createdAt = LocalDateTime.now();
 

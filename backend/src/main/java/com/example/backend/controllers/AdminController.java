@@ -60,6 +60,32 @@ public class AdminController {
                 .build();
     }
 
+    @GetMapping("/orders/{orderId}/user")
+    public Response getUserFromOrder(@PathVariable Long orderId) {
+        try {
+            OrderDto order = orderService.getOrderById(orderId);
+            UserDto user = order.getUser();
+
+            if (user == null) {
+                return Response.builder()
+                        .status(404)
+                        .message("User not found for order id: " + orderId)
+                        .build();
+            }
+
+            return Response.builder()
+                    .status(200)
+                    .message("User retrieved successfully from order")
+                    .user(user)
+                    .build();
+        } catch (RuntimeException e) {
+            return Response.builder()
+                    .status(404)
+                    .message("Order not found with id: " + orderId)
+                    .build();
+        }
+    }
+
     @PostMapping("/create/book")
     public Response createBook(@RequestBody BookDto bookDto){
         BookDto createdBook = catalogService.createBook(bookDto);

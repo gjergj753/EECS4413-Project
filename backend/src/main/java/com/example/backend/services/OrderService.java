@@ -1,9 +1,6 @@
 package com.example.backend.services;
 
-import com.example.backend.dto.CheckoutRequest;
-import com.example.backend.dto.OrderDto;
-import com.example.backend.dto.OrderItemDto;
-import com.example.backend.dto.BookDto;
+import com.example.backend.dto.*;
 import com.example.backend.entity.*;
 import com.example.backend.repository.*;
 import org.springframework.data.domain.Page;
@@ -30,6 +27,7 @@ public class OrderService {
     private final CartRepo cartRepo;
     private final PaymentRepo paymentRepo;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final AddressRepo addressRepo;
     private final BookRepo bookRepo;
     private final MockPaymentProcessor mockPaymentProcessor;
 
@@ -38,6 +36,7 @@ public class OrderService {
                        CartRepo cartRepo,
                        PaymentRepo paymentRepo,
                        PaymentMethodRepository paymentMethodRepository,
+                       AddressRepo addressRepo,
                        BookRepo bookRepo,
                        MockPaymentProcessor mockPaymentProcessor) {
         this.orderRepo = orderRepo;
@@ -45,6 +44,7 @@ public class OrderService {
         this.cartRepo = cartRepo;
         this.paymentRepo = paymentRepo;
         this.paymentMethodRepository = paymentMethodRepository;
+        this.addressRepo = addressRepo;
         this.bookRepo = bookRepo;
         this.mockPaymentProcessor = mockPaymentProcessor;
     }
@@ -133,6 +133,48 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus("PENDING_PAYMENT");
+
+        if (request.getAddressId() != null) {
+            // Using saved address
+            Address address = addressRepo.findById(request.getAddressId())
+                    .orElseThrow(() -> new RuntimeException("Address not found"));
+
+            // Verify address belongs to user
+            if (!address.getUser().getUserId().equals(request.getUserId())) {
+                throw new RuntimeException("Address does not belong to user");
+            }
+
+            order.setShippingStreet(address.getStreet());
+            order.setShippingCity(address.getCity());
+            order.setShippingProvince(address.getProvince());
+            order.setShippingPostalCode(address.getPostalCode());
+            order.setShippingCountry(address.getCountry());
+
+        } else if (request.getTemporaryAddress() != null) {
+            // Using temporary address
+            CheckoutRequest.TemporaryAddressInfo tempAddr = request.getTemporaryAddress();
+
+            order.setShippingStreet(tempAddr.getStreet());
+            order.setShippingCity(tempAddr.getCity());
+            order.setShippingProvince(tempAddr.getProvince());
+            order.setShippingPostalCode(tempAddr.getPostalCode());
+            order.setShippingCountry(tempAddr.getCountry());
+
+            // Save address if user requested it
+            if (request.isSaveAddress()) {
+                Address newAddress = new Address();
+                newAddress.setUser(user);
+                newAddress.setStreet(tempAddr.getStreet());
+                newAddress.setCity(tempAddr.getCity());
+                newAddress.setProvince(tempAddr.getProvince());
+                newAddress.setPostalCode(tempAddr.getPostalCode());
+                newAddress.setCountry(tempAddr.getCountry());
+                addressRepo.save(newAddress);
+            }
+
+        } else {
+            throw new RuntimeException("No address information provided");
+        }
 
         BigDecimal totalPrice = BigDecimal.ZERO;
         for (CartItem cartItem : cart.getCartItemList()) {
@@ -320,6 +362,17 @@ public class OrderService {
         dto.setStatus(order.getStatus());
         dto.setCreatedAt(order.getCreatedAt());
 
+        // Include shipping address
+        dto.setShippingStreet(order.getShippingStreet());
+        dto.setShippingCity(order.getShippingCity());
+        dto.setShippingProvince(order.getShippingProvince());
+        dto.setShippingPostalCode(order.getShippingPostalCode());
+        dto.setShippingCountry(order.getShippingCountry());
+
+        if (order.getUser() != null) {
+            dto.setUser(convertUserToDto(order.getUser()));
+        }
+
         // Convert order items without circular references
         if (order.getOrderItemList() != null) {
             dto.setOrderItemList(order.getOrderItemList().stream()
@@ -358,6 +411,17 @@ public class OrderService {
         dto.setQuantity(book.getQuantity());
         dto.setYear(book.getYear());
         dto.setGenres(book.getGenres());
+        return dto;
+    }
+
+    private UserDto convertUserToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setUserId(user.getUserId());
+        dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setAdmin(user.isAdmin());
+        // Don't set password for security
         return dto;
     }
 }

@@ -16,6 +16,9 @@ public class CheckoutRequest {
     private Long userId;
     private Long addressId;
 
+    private TemporaryAddressInfo temporaryAddress;
+    private boolean saveAddress = false;
+
     //Use saved payment method
     private Long paymentMethodId;
 
@@ -24,6 +27,19 @@ public class CheckoutRequest {
 
     // should payment be saved for future use??
     private boolean savePaymentMethod = false;
+
+    @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TemporaryAddressInfo {
+        private String street;
+        private String city;
+        private String province;
+        private String postalCode;
+        private String country;
+    }
 
     @Data
     @JsonInclude(JsonInclude.Include.NON_NULL)
