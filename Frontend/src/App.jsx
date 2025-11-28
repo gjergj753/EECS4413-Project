@@ -15,7 +15,7 @@ import OrdersPage from "./pages/OrdersPage";
 import AdminSalesPage from "./pages/AdminSalesPage";
 import AdminInventoryPage from "./pages/AdminInventoryPage";
 import AdminCustomersPage from "./pages/AdminCustomersPage";
-
+import OrderDetailsPage from "./pages/OrderDetails";
 
 function AppContent() {
   const location = useLocation();
@@ -60,6 +60,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/sign-up" element={<SignupPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success/:orderId" element={<OrderSummaryPage />} />
@@ -68,6 +69,7 @@ function AppContent() {
           <Route path="/admin/inventory" element={<AdminInventoryPage />} />
           <Route path="/admin/sales" element={<AdminSalesPage />} />
           <Route path="/admin/customers" element={<AdminCustomersPage />} />
+ 
 
 
 

@@ -29,7 +29,10 @@ export default function OrdersPage() {
     async function loadOrders() {
       try {
         const data = await getUserOrders(user.userId, user.authToken);
-        setOrders(data.orderList || []);
+        const sorted = (data.orderList || []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setOrders(sorted);
       } catch (err) {
         console.error("Failed to load orders:", err);
       } finally {
@@ -163,13 +166,31 @@ export default function OrdersPage() {
             </Box>
 
             <Divider />
-
             {/* TOTAL */}
             <Box sx={{ p: 2, textAlign: "right" }}>
               <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                 Total: ${order.totalPrice.toFixed(2)}
               </Typography>
             </Box>
+
+            {/* VIEW ORDER DETAILS BUTTON */}
+            <Box sx={{ p: 2, textAlign: "right" }}>
+              <Button
+                variant="contained"
+                onClick={() => navigate(`/orders/${order.orderId}`)}
+                sx={{
+                  borderRadius: "20px",
+                  textTransform: "none",
+                  px: 3,
+                  fontWeight: "bold",
+                  mt: 1
+                }}
+              >
+                View Order Details
+              </Button>
+            </Box>
+
+
           </Paper>
         ))}
 
