@@ -35,5 +35,11 @@ public class OrderDto {
 
     private PaymentDto payment;
 
+    private String shippingStreet;
+    private String shippingCity;
+    private String shippingProvince;
+    private String shippingPostalCode;
+    private String shippingCountry;
+
 
 }
