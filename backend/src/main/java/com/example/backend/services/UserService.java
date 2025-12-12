@@ -1,7 +1,9 @@
 package com.example.backend.services;
 
 import com.example.backend.dto.UserDto;
+import com.example.backend.entity.Order;
 import com.example.backend.entity.User;
+import com.example.backend.repository.OrderRepo;
 import com.example.backend.repository.UserRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +17,11 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepo userRepo;
+    private final OrderRepo orderRepo;
 
-    public UserService(UserRepo userRepo) {
+    public UserService(UserRepo userRepo, OrderRepo orderRepo) {
         this.userRepo = userRepo;
+        this.orderRepo = orderRepo;
     }
 
     // Get all users (admin function)
@@ -70,11 +74,31 @@ public class UserService {
     }
 
     // Delete user
+    // Handles cascade deletion of addresses, cart, payment methods
+    // Orders are preserved by setting user to null (for audit trail)
     public void deleteUser(Long id) {
-        if (!userRepo.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Preserve orders by nullifying the user reference
+        // This keeps order history for business records
+        List<Order> userOrders = user.getOrders();
+        if (userOrders != null && !userOrders.isEmpty()) {
+            for (Order order : userOrders) {
+                order.setUser(null);
+            }
+            orderRepo.saveAll(userOrders);
         }
-        userRepo.deleteById(id);
+
+        // Clear collections to help with cascade delete
+        user.getAddressList().clear();
+        user.getPaymentMethods().clear();
+        if (user.getCart() != null) {
+            user.setCart(null);
+        }
+
+        // Now delete the user - cascade will handle related entities
+        userRepo.delete(user);
     }
 
     private UserDto convertToDto(User user) {
