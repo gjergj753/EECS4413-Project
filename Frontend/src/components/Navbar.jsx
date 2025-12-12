@@ -4,6 +4,7 @@ import {
   AppBar, Toolbar, CssBaseline, Drawer, IconButton, Typography,
   List, ListItemButton, ListItemIcon, ListItemText, Divider, Box, Badge,
   Collapse
+
 } from '@mui/material';
 
 import MenuIcon from '@mui/icons-material/Menu';
@@ -19,6 +20,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import GroupIcon from '@mui/icons-material/Group';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../context/CartContext";
@@ -58,7 +60,7 @@ export default function Navbar() {
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar>
-        <Typography variant="h6">BookStore</Typography>
+        <Typography variant="h6">novelty</Typography>
       </Toolbar>
       <Divider />
 
@@ -185,9 +187,9 @@ export default function Navbar() {
         <MenuIcon />
       </IconButton>
 
-      <MenuBookIcon sx={{ mr: 1 }} />
+      <AutoStoriesIcon sx={{ mr: 1 }} />
       <Typography variant="h6" noWrap>
-        BookStore
+        novelty
       </Typography>
     </Box>
 
