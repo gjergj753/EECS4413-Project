@@ -1,10 +1,7 @@
 package com.example.backend.services;
 
 import com.example.backend.dto.UserDto;
-import com.example.backend.entity.Cart;
-import com.example.backend.entity.Order;
 import com.example.backend.entity.User;
-import com.example.backend.repository.OrderRepo;
 import com.example.backend.repository.UserRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +15,9 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepo userRepo;
-    private final OrderRepo orderRepo;
 
-    public UserService(UserRepo userRepo, OrderRepo orderRepo) {
+    public UserService(UserRepo userRepo) {
         this.userRepo = userRepo;
-        this.orderRepo = orderRepo;
     }
 
     // Get all users (admin function)
@@ -74,54 +69,37 @@ public class UserService {
         return convertToDto(updatedUser);
     }
 
-    // Delete user
-    // Handles cascade deletion of addresses, cart, payment methods
-    // Orders are preserved by setting user to null (for audit trail)
+    // Delete user with all related entities using native SQL
+    // This handles the circular FK constraint between users and addresses
+    // Orders are preserved with user_id set to null for audit purposes
+    @Transactional
     public void deleteUser(Long id) {
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-
-        // Preserve orders by nullifying the user reference
-        // This keeps order history for business records
-        List<Order> userOrders = user.getOrders();
-        if (userOrders != null && !userOrders.isEmpty()) {
-            for (Order order : userOrders) {
-                order.setUser(null);
-            }
-            orderRepo.saveAll(userOrders);
+        // Verify user exists
+        if (!userRepo.existsById(id)) {
+            throw new RuntimeException("User not found with id: " + id);
         }
 
-        // Clear the orders list after nullifying references
-        user.getOrders().clear();
+        // Delete in correct order to respect FK constraints
+        // 1. Nullify orders to preserve them (audit trail)
+        userRepo.nullifyOrdersUserId(id);
 
-        // Clear addresses - cascade will delete them
-        if (user.getAddressList() != null) {
-            user.getAddressList().clear();
-        }
+        // 2. Delete cart items (FK to cart)
+        userRepo.deleteCartItemsByUserId(id);
 
-        // Clear payment methods - cascade will delete them
-        if (user.getPaymentMethods() != null) {
-            user.getPaymentMethods().clear();
-        }
+        // 3. Delete cart (FK to user)
+        userRepo.deleteCartByUserId(id);
 
-        // Cart requires special handling because Cart owns the relationship
-        // We need to clear cart items first, then nullify the relationship
-        Cart cart = user.getCart();
-        if (cart != null) {
-            // Clear cart items (cascade will handle deletion)
-            if (cart.getCartItemList() != null) {
-                cart.getCartItemList().clear();
-            }
-            // Break the bidirectional link
-            cart.setUser(null);
-            user.setCart(null);
-        }
+        // 4. Delete payment methods (FK to user)
+        userRepo.deletePaymentMethodsByUserId(id);
 
-        // Save to persist the cleared relationships
-        userRepo.save(user);
+        // 5. Delete addresses (FK to user)
+        userRepo.deleteAddressesByUserId(id);
 
-        // Now delete the user
-        userRepo.delete(user);
+        // 6. Break circular FK by nullifying users.address_id
+        userRepo.nullifyUserAddressId(id);
+
+        // 7. Finally delete the user
+        userRepo.deleteById(id);
     }
 
     private UserDto convertToDto(User user) {
