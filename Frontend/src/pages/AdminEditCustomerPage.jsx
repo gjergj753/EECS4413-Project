@@ -3,14 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box, Typography, Paper, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, Divider, FormControlLabel, Checkbox, Alert, Snackbar,
-  List, ListItem, ListItemText, IconButton, Chip
+  List, ListItem, ListItemText, IconButton, Chip, MenuItem, Grid
 } from "@mui/material";
 import { primaryButton, secondaryButton, errorButton } from "../utils/buttonStyles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useAuth } from "../context/AuthContext";
-import { getAllCustomers, updateCustomerDetails, updateCustomerPassword, deleteUser } from "../api/adminApi";
+import { getAllCustomers, updateCustomerDetails, updateCustomerPassword, deleteCustomer } from "../api/adminApi";
 import { getAddressForUser, updateAddress } from "../api/addressApi";
 import { getUserPaymentMethods, addPaymentMethod, deletePaymentMethod, setUserDefaultPaymentMethod } from "../api/paymentApi";
+import {
+  isEmpty,
+  isValidCardNumber,
+  isValidExpiry,
+  isValidCvv,
+  detectCardBrand,
+} from "../utils/validation";
 
 export default function AdminEditCustomerPage() {
   const { userId } = useParams();
@@ -42,19 +49,31 @@ export default function AdminEditCustomerPage() {
     country: ""
   });
 
-  const [billing, setBilling] = useState({
-    cardLast4: "",
-    cardBrand: "",
+  const [payment, setPayment] = useState({
+    cardHolderName: "",
+    cardNumber: "",
     expiryMonth: "",
-    expiryYear: ""
+    expiryYear: "",
+    cvv: "",
   });
+
+  const [errors, setErrors] = useState({
+    payment: {},
+  });
+
+  // --- Dropdown lists ---
+  const months = Array.from({ length: 12 }, (_, i) =>
+    (i + 1).toString().padStart(2, "0")
+  );
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 15 }, (_, i) => (currentYear + i).toString());
 
   // ---------------- LOAD CUSTOMER DATA ----------------
   useEffect(() => {
     async function loadCustomer() {
       try {
-        const res = await getAllCustomers();
-        const customers = res.userList || res || [];
+        const customers = await getAllCustomers();
         const foundCustomer = customers.find(c => c.userId === parseInt(userId));
         
         if (!foundCustomer) {
@@ -73,7 +92,7 @@ export default function AdminEditCustomerPage() {
           admin: foundCustomer.admin ?? false
         });
 
-        // Load address if any
+        // Populate address if any
         try {
           const addrRes = await getAddressForUser(foundCustomer.userId, authToken);
           const addr = addrRes.address || {};
@@ -105,8 +124,6 @@ export default function AdminEditCustomerPage() {
   const loadPaymentMethods = async (customerId) => {
     try {
       const res = await getUserPaymentMethods(customerId, authToken);
-      console.log("Payment methods response:", res); // Debug log
-      // API returns paymentMethodList, not paymentMethods
       setPaymentMethods(res.paymentMethodList || []);
     } catch (err) {
       console.error("Failed to load payment methods", err);
@@ -123,9 +140,12 @@ export default function AdminEditCustomerPage() {
     setAlert({ open: false, severity: "success", message: "" });
   };
 
+  const clearSection = (section) => {
+    setErrors((prev) => ({ ...prev, [section]: {} }));
+  };
+
   // ---------------- UPDATE PERSONAL ----------------
   const updatePersonal = async () => {
-    // fill with exisiting details
     if (!customer) return;
     const body = {
       userId: customer.userId,
@@ -194,33 +214,81 @@ export default function AdminEditCustomerPage() {
         await updateAddress(addressId, payload, authToken);
         showAlert("success", "Shipping address updated successfully!");
       } else {
-        showAlert("warning", "No address was entered for this user; Shipping info not updated.");
+        showAlert("warning", "No address entered. Shipping information not updated.");
       }
     } catch (err) {
       console.error("Failed to update address", err);
-      showAlert("error", "Failed to update shipping address");
+      showAlert("error", "Failed to update shipping address.");
     }
   };
 
-  // ---------------- ADD PAYMENT ----------------
-  const addPayment = async () => {
+  // ---------------- ADD PAYMENT HANDLER ----------------
+  const handleSavePayment = async () => {
     if (!customer) return;
+    
+    clearSection("payment");
 
-    const body = {
-      cardLast4: (billing.cardLast4 || "").slice(-4),
-      cardBrand: billing.cardBrand || "UNKNOWN",
-      expiryMonth: billing.expiryMonth || "",
-      expiryYear: billing.expiryYear || ""
-    };
+    const sectionErrors = {};
+
+    const raw = payment.cardNumber.startsWith("****")
+      ? null
+      : payment.cardNumber.replace(/\s+/g, "");
+
+    if (raw && !isValidCardNumber(raw))
+      sectionErrors.cardNumber = "Invalid card number.";
+
+    if (!isValidExpiry(payment.expiryMonth, payment.expiryYear)) {
+      sectionErrors.expiryMonth = "Invalid expiry date.";
+      sectionErrors.expiryYear = "Invalid expiry date.";
+    }
+
+    if (isEmpty(payment.cvv)) sectionErrors.cvv = "CVV is required.";
+    else if (!isValidCvv(payment.cvv)) sectionErrors.cvv = "Invalid CVV.";
+
+    if (Object.keys(sectionErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, payment: sectionErrors }));
+      return;
+    }
 
     try {
-      await addPaymentMethod(customer.userId, body, authToken);
-      showAlert("success", `Payment method added successfully!`);
-      setBilling({ cardLast4: "", cardBrand: "", expiryMonth: "", expiryYear: "" });
+      const existing = await getUserPaymentMethods(customer.userId, authToken);
+
+      if (existing.paymentMethodList?.length > 0) {
+        const old = existing.paymentMethodList[0];
+        await deletePaymentMethod(
+          old.paymentMethodId,
+          customer.userId,
+          authToken
+        );
+      }
+
+      const last4 = raw
+        ? raw.slice(-4)
+        : existing.paymentMethodList[0]?.cardLast4;
+
+      const newPm = {
+        cardLast4: last4,
+        cardBrand: detectCardBrand(raw || last4),
+        expiryMonth: payment.expiryMonth,
+        expiryYear: payment.expiryYear,
+        isDefault: true,
+      };
+
+      await addPaymentMethod(customer.userId, newPm, authToken);
+
+      setPayment({
+        cardHolderName: payment.cardHolderName,
+        cardNumber: `**** **** **** ${last4}`,
+        expiryMonth: payment.expiryMonth,
+        expiryYear: payment.expiryYear,
+        cvv: "",
+      });
+
+      showAlert("success", "Billing Information updated!");
       loadPaymentMethods(customer.userId);
     } catch (err) {
-      console.error("Failed to add payment method", err);
-      showAlert("error", "Failed to add payment method");
+      console.error(err);
+      showAlert("error", "Failed to update billing information.");
     }
   };
 
@@ -238,7 +306,7 @@ export default function AdminEditCustomerPage() {
       loadPaymentMethods(customer.userId);
     } catch (err) {
       console.error("Failed to delete payment method", err);
-      showAlert("error", "Failed to delete payment method");
+      showAlert("error", "Failed to delete payment method.");
     }
   };
 
@@ -252,24 +320,24 @@ export default function AdminEditCustomerPage() {
       loadPaymentMethods(customer.userId);
     } catch (err) {
       console.error("Failed to set default payment method", err);
-      showAlert("error", "Failed to set default payment method");
+      showAlert("error", "Failed to set default payment method.");
     }
   };
 
   // ---------------- DELETE USER ----------------
-  const handleDeleteUser = async () => {
+  const handleDeleteCustomer = async () => {
     if (!customer) return;
     
-    if (!window.confirm("Are you sure you want to delete this user?")) {
+    if (!window.confirm("Are you sure you want to delete this customer?")) {
       return;
     }
 
     try {
-      await deleteUser(customer.userId);
+      await deleteCustomer(customer.userId);
       navigate("/admin/customers");
     } catch (err) {
-      console.error("Failed to delete user", err);
-      showAlert("error", "Failed to delete user.");
+      console.error("Failed to delete customer", err);
+      showAlert("error", "Failed to delete customer.");
     }
   };
 
@@ -281,11 +349,10 @@ export default function AdminEditCustomerPage() {
     );
   }
 
-
   return (
     <Box sx={{ ml: 0, width: "100%", px: { xs: 2, md: 4 }, py: 4, display: "flex"}}>
       <Box sx={{ width: "100%", maxWidth: { xs: "100%", md: "70%" } }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
+        {/* <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
          <Button 
             variant="outlined" 
             sx={secondaryButton} 
@@ -296,7 +363,22 @@ export default function AdminEditCustomerPage() {
           <Typography variant="h4" sx={{ ml: 3, fontWeight: "bold" }}>
             Edit Customer #{customer.userId} - {customer.firstName} {customer.lastName}
           </Typography>
+        </Box> */}
+        <Box>
+         <Button 
+            variant="outlined" 
+            sx={secondaryButton} 
+            onClick={() => navigate("/admin/customers")}
+          >
+            ← Back to Customers
+          </Button>
         </Box>
+        <Box sx={{ display: "flex", justifyContent: "center", m: 3 }}>
+          <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+            Edit Customer #{customer.userId} - {customer.firstName} {customer.lastName}
+          </Typography>
+        </Box>
+
 
       <Paper sx={{ p: 4, mb: 4, borderRadius: 3 }}>
         {/* PERSONAL */}
@@ -307,7 +389,7 @@ export default function AdminEditCustomerPage() {
         <FormControlLabel control={<Checkbox checked={personal.admin} onChange={(e) => setPersonal({ ...personal, admin: e.target.checked })} />} label="Admin User" />
 
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <Button variant="contained" sx={primaryButton} onClick={updatePersonal}>Save Personal Info</Button>
+          <Button variant="contained" sx={primaryButton} onClick={updatePersonal}>Update Personal Info</Button>
           <Button variant="outlined" sx={secondaryButton} onClick={openPasswordModal}>Change Password</Button>
         </Box>
       </Paper>
@@ -322,7 +404,7 @@ export default function AdminEditCustomerPage() {
         <TextField fullWidth label="Country" sx={{ mb: 2 }} value={shipping.country} onChange={(e) => setShipping({ ...shipping, country: e.target.value })} />
 
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <Button variant="contained" sx={primaryButton} onClick={updateShipping}>Save Shipping Info</Button>
+          <Button variant="contained" sx={primaryButton} onClick={updateShipping}>Update Shipping Info</Button>
         </Box>
       </Paper>
 
@@ -386,24 +468,101 @@ export default function AdminEditCustomerPage() {
 
         {/* ADD PAYMENT METHOD */}
         <Typography sx={{ fontWeight: "bold", mb: 2 }}>Add New Payment Method</Typography>
-        <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-          <TextField label="Card Last 4" value={billing.cardLast4} onChange={(e) => setBilling({ ...billing, cardLast4: e.target.value })} />
-          <TextField label="Card Brand" value={billing.cardBrand} onChange={(e) => setBilling({ ...billing, cardBrand: e.target.value })} />
+        
+        <Box 
+          sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2, mb: 2, }} 
+        >
+          {/* Cardholder Name */}
+          <TextField
+            fullWidth
+            label="Cardholder Name"
+            value={payment.cardHolderName}
+            onChange={(e) =>
+              setPayment({ ...payment, cardHolderName: e.target.value })
+            }
+          />
+
+          {/* Card Number */}
+          <TextField
+            fullWidth
+            label="Card Number"
+            value={payment.cardNumber}
+            error={!!errors.payment.cardNumber}
+            helperText={errors.payment.cardNumber}
+            onFocus={() => {
+              if (payment.cardNumber.startsWith("****")) {
+                setPayment({ ...payment, cardNumber: "" });
+              }
+            }}
+            onChange={(e) => setPayment({ ...payment, cardNumber: e.target.value })}
+          />
         </Box>
-        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-          <TextField label="Expiry Month (MM)" value={billing.expiryMonth} onChange={(e) => setBilling({ ...billing, expiryMonth: e.target.value })} />
-          <TextField label="Expiry Year (YYYY)" value={billing.expiryYear} onChange={(e) => setBilling({ ...billing, expiryYear: e.target.value })} />
+
+        <Box
+          sx={{ display: "grid", gridTemplateColumns: { xs: "0.5fr 0.5fr 0.5fr", md: "1fr 1fr 1fr" }, gap: 2, }}
+        >
+          {/* Expiry Month */}
+          <TextField
+            select
+            fullWidth
+            label="Exp Month"
+            value={payment.expiryMonth}
+            error={!!errors.payment.expiryMonth}
+            helperText={errors.payment.expiryMonth}
+            onChange={(e) =>
+              setPayment({ ...payment, expiryMonth: e.target.value })
+            }
+          >
+            {months.map((m) => (
+              <MenuItem key={m} value={m}>
+                {m}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* Expiry Year */}
+          <TextField
+            select
+            fullWidth
+            label="Exp Year"
+            value={payment.expiryYear}
+            error={!!errors.payment.expiryYear}
+            helperText={errors.payment.expiryYear}
+            onChange={(e) =>
+              setPayment({ ...payment, expiryYear: e.target.value })
+            }
+          >
+            {years.map((y) => (
+              <MenuItem key={y} value={y}>
+                {y}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* CVV */}
+          <TextField
+            fullWidth
+            label="CVV"
+            value={payment.cvv}
+            error={!!errors.payment.cvv}
+            helperText={errors.payment.cvv}
+            onChange={(e) => setPayment({ ...payment, cvv: e.target.value })}
+          />
         </Box>
-        <Button variant="contained" sx={primaryButton} onClick={addPayment}>Add Payment Method</Button>
+
+        <Button variant="contained" sx={{ ...primaryButton, mt: 2 }} onClick={handleSavePayment}>
+          Add Payment Method
+        </Button>
+
       </Paper>
 
       <Box sx={{ mt: 4 }}>
-       <Button onClick={handleDeleteUser} variant="contained" sx={errorButton} >Delete User</Button>
+       <Button onClick={handleDeleteCustomer} variant="contained" sx={errorButton}>Delete Customer</Button>
       </Box>
 
       {/* ------------ PASSWORD CHANGE MODAL ------------ */}
       <Dialog open={passwordModal} onClose={closePasswordModal} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: "bold" }}>Change Password</DialogTitle>
+        <DialogTitle sx={{ fontWeight: "bold" }}>Change Customer's Password</DialogTitle>
         <DialogContent dividers>
           <TextField 
             fullWidth 

@@ -4,11 +4,12 @@ import {
   Box, Typography, Paper, Divider, Button, TextField, Dialog,
   DialogTitle, DialogContent, DialogActions, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Select, MenuItem,
-  FormControl, InputLabel, Alert, Snackbar
+  FormControl, InputLabel, Alert, Snackbar, Pagination, CircularProgress,
+  LinearProgress
 } from "@mui/material";
 import { primaryButton, secondaryButton, errorButton } from "../utils/buttonStyles";
 import { useAuth } from "../context/AuthContext";
-import { getSalesHistory, getOrderById, updateOrderStatus, cancelOrder } from "../api/adminApi";
+import { getAllOrders, getOrderById, updateOrderStatus, cancelOrder } from "../api/adminApi";
 import { generateSalesCSV } from "../utils/generateSalesCSV";
 
 export default function AdminSalesPage() {
@@ -16,9 +17,8 @@ export default function AdminSalesPage() {
   const authToken = user?.authToken;
   const location = useLocation();
 
-  const [sales, setSales] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [allOrders, setAllOrders] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
 
@@ -32,6 +32,9 @@ export default function AdminSalesPage() {
     toDate: "",
     minTotal: ""
   });
+
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(100);
 
   // ---------------------- ALERT HANDLERS ----------------------
   const showAlert = (severity, message) => {
@@ -54,20 +57,43 @@ export default function AdminSalesPage() {
     });
   };
 
+  // ------------------- LOAD ALL ORDERS -------------------
+  async function loadAllOrders() {
+    setInitialLoading(true);
+    try {
+      const orders = await getAllOrders(authToken);
+      setAllOrders(orders);
+    } catch (err) {
+      console.error(err);
+      showAlert("error", "Failed to load orders. Please refresh the page.");
+      setAllOrders([]);
+    } finally {
+      setInitialLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAllOrders();
+  }, []);
+
   // ---------------------- FOR URL PARAMETERS FROM ADMINCUSTOMERSPAGE ----------------------
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const orderIdParam = params.get("orderId");
 
-    if (orderIdParam && sales.length > 0) {
+    if (orderIdParam && allOrders.length > 0) {
       setFilters(prev => ({ ...prev, orderId: orderIdParam }));
       openOrderDetails(parseInt(orderIdParam));
     }
-  }, [location.search, sales]);
+  }, [location.search, allOrders]);
 
-  // ---------------------- FILTER LOGIC ----------------------
-  const filteredSales = useMemo(() => {
-    return sales.filter((order) => {
+  // ------------------- FILTER LOGIC -------------------
+  useEffect(() => {
+    setPage(0); // Reset to first page when filters change
+  }, [filters.orderId, filters.status, filters.productName, filters.fromDate, filters.toDate, filters.minTotal]);
+
+  const filteredOrders = useMemo(() => {
+    return allOrders.filter((order) => {
       const orderDate = new Date(order.createdAt);
 
       if (filters.orderId && !order.orderId.toString().includes(filters.orderId)) return false;
@@ -93,23 +119,19 @@ export default function AdminSalesPage() {
 
       return true;
     });
-  }, [filters, sales]);
+  }, [filters, allOrders]);
 
-  // ---------------------- LOAD ALL ORDERS ----------------------
-  useEffect(() => {
-    async function loadSales() {
-      try {
-        const res = await getSalesHistory(authToken, 0, 200);
-        setSales(res.orderList || []);
-      } catch {
-        setError("Failed to load sales.");
-      } finally {
-        setLoading(false);
-      }
-    }
+  // ------------------- PAGINATE FILTERED RESULTS -------------------
+  const totalFilteredOrders = filteredOrders.length;
+  const totalPages = Math.ceil(totalFilteredOrders / pageSize);
+  const paginatedOrders = useMemo(() => {
+    return filteredOrders.slice(page * pageSize, (page + 1) * pageSize);
+  }, [filteredOrders, page, pageSize]);
 
-    loadSales();
-  }, [authToken]);
+  // ------------------- PAGINATION HANDLER -------------------
+  const handlePageChange = (event, value) => {
+    setPage(value - 1); // mui Pagination is 1-indexed, API is 0-indexed
+  };
 
   // ---------------------- LOAD SINGLE ORDER ----------------------
   async function openOrderDetails(orderId) {
@@ -122,7 +144,7 @@ export default function AdminSalesPage() {
     }
   }
 
-  // ---------------------- UPDATE ORDER STATUS ----------------------
+  // ---------------------- UPDATE ORDER STATUS HANDLER ----------------------
   const handleUpdateStatus = async () => {
     if (!selectedOrder || !newStatus) return;
 
@@ -132,7 +154,7 @@ export default function AdminSalesPage() {
       
       // Update local state
       setSelectedOrder({ ...selectedOrder, status: newStatus });
-      setSales(prev => prev.map(order => 
+      setAllOrders(prev => prev.map(order => 
         order.orderId === selectedOrder.orderId 
           ? { ...order, status: newStatus }
           : order
@@ -144,7 +166,7 @@ export default function AdminSalesPage() {
     }
   };
 
-  // ---------------------- CANCEL ORDER ----------------------
+  // ---------------------- CANCEL ORDER HANDLER ----------------------
   const handleCancelOrder = async () => {
     if (!selectedOrder) return;
 
@@ -162,7 +184,7 @@ export default function AdminSalesPage() {
       showAlert("success", "Order cancelled successfully!");
       
       // Remove order from local states
-      setSales(prev => prev.filter(order => order.orderId !== selectedOrder.orderId));
+      setAllOrders(prev => prev.filter(order => order.orderId !== selectedOrder.orderId));
       setSelectedOrder(null);
     } catch (err) {
       console.error("Failed to cancel order", err);
@@ -171,9 +193,27 @@ export default function AdminSalesPage() {
     }
   };
 
-
-  if (loading) return <Typography sx={{ ml: 2, mt: 4 }}>Loading sales...</Typography>;
-  if (error) return <Typography sx={{ ml: 2, mt: 4, color: "red" }}>{error}</Typography>;
+  // Show loading screen on initial load
+  if (initialLoading) {
+    return (
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: "column",
+        alignItems: "center", 
+        justifyContent: "center", 
+        minHeight: "60vh",
+        gap: 3
+      }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" color="text.secondary">
+          Loading orders... ({allOrders.length} orders loaded)
+        </Typography>
+        <Box sx={{ width: "300px" }}>
+          <LinearProgress />
+        </Box>
+      </Box>
+    );
+  }
 
 
   return (
@@ -184,44 +224,81 @@ export default function AdminSalesPage() {
 
       {/* Filter Section */}
       <Paper sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: "bold" }}>Filter By</Typography>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>Filter By</Typography>
         
         <Box sx={{
-          mt: 2,
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1.5fr" },
           gap: 2
         }}>
-          <TextField label="Order ID" value={filters.orderId}
-            onChange={e => setFilters({ ...filters, orderId: e.target.value })} />
-          <TextField label="Status" value={filters.status}
-            onChange={e => setFilters({ ...filters, status: e.target.value })} />
-          <TextField label="Book Title" value={filters.productName}
-            onChange={e => setFilters({ ...filters, productName: e.target.value })} />
-          <TextField type="date" label="From" slotProps={{ inputLabel: { shrink: true } }}
-            value={filters.fromDate} onChange={e => setFilters({ ...filters, fromDate: e.target.value })} />
-          <TextField type="date" label="To" slotProps={{ inputLabel: { shrink: true } }}
-            value={filters.toDate} onChange={e => setFilters({ ...filters, toDate: e.target.value })} />
-          <TextField label="Min Total ($)" type="number" value={filters.minTotal}
-            onChange={e => setFilters({ ...filters, minTotal: e.target.value })} />
+          <TextField 
+            label="Order ID" 
+            value={filters.orderId}
+            onChange={e => setFilters({ ...filters, orderId: e.target.value })}
+            placeholder="Search by ID..."
+          />
+          <TextField 
+            label="Status" 
+            value={filters.status}
+            onChange={e => setFilters({ ...filters, status: e.target.value })}
+            placeholder="Search by status..."
+          />
+          <TextField 
+            label="Book Title" 
+            value={filters.productName}
+            onChange={e => setFilters({ ...filters, productName: e.target.value })}
+            placeholder="Search by books in order..."
+          />
+          <TextField 
+            type="date" 
+            label="From" 
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={filters.fromDate} 
+            onChange={e => setFilters({ ...filters, fromDate: e.target.value })}
+          />
+          <TextField 
+            type="date" 
+            label="To" 
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={filters.toDate} 
+            onChange={e => setFilters({ ...filters, toDate: e.target.value })}
+          />
+          <TextField 
+            label="Min Total ($)" 
+            type="number" 
+            value={filters.minTotal}
+            onChange={e => setFilters({ ...filters, minTotal: e.target.value })}
+            placeholder="Minimum total..."
+          />
         </Box>
 
-        <Box sx={{ mt:2}}>
-          <Button variant="outlined" sx={secondaryButton} onClick={resetFilters}>
-            Reset Filters
-          </Button>
-        </Box>
+        {(filters.orderId || filters.status || filters.productName || filters.fromDate || filters.toDate || filters.minTotal) && (
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" sx={secondaryButton} onClick={resetFilters}>
+              Clear All Filters
+            </Button>
+          </Box>
+        )}
       </Paper>
 
-      {/* Download Sales Report */}
-      <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 3, gap: 2 }}>
+      {/* Download Sales Report & Pagination Info */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, flexWrap: "wrap", gap: 2 }}>
         <Button
           variant="contained"
           sx={primaryButton}
-          onClick={() => generateSalesCSV(filteredSales, filters)}
+          onClick={() => generateSalesCSV(filteredOrders, filters)}
         >
           Download Sales Report (For Date Range)
         </Button>
+        
+        <Typography variant="body2" sx={{ color: "gray" }}>
+          Showing {paginatedOrders.length > 0 ? page * pageSize + 1 : 0} - {Math.min((page + 1) * pageSize, totalFilteredOrders)} of {totalFilteredOrders} orders
+          {totalFilteredOrders !== allOrders.length && (
+            <span style={{ fontWeight: "bold", marginLeft: "8px" }}>
+              (filtered from {allOrders.length} total)
+            </span>
+          )}
+        </Typography>
       </Box>
 
       {/* Table */}
@@ -238,7 +315,7 @@ export default function AdminSalesPage() {
           </TableHead>
 
           <TableBody>
-            {filteredSales.map(order => (
+            {paginatedOrders.map(order => (
               <TableRow key={order.orderId}>
                 <TableCell>{order.orderId}</TableCell>
                 <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
@@ -257,16 +334,33 @@ export default function AdminSalesPage() {
               </TableRow>
             ))}
 
-            {filteredSales.length === 0 && (
+            {paginatedOrders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} sx={{ textAlign: "center", py: 3, color: "gray" }}>
-                  No orders match your filters.
+                <TableCell colSpan={5} sx={{ textAlign: "center", py: 4, color: "gray" }}>
+                  {filters.orderId || filters.status || filters.productName || filters.fromDate || filters.toDate || filters.minTotal
+                    ? "No orders match your filters."
+                    : "No orders available."}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Pagination 
+            count={totalPages} 
+            page={page + 1} 
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -291,7 +385,7 @@ export default function AdminSalesPage() {
 
             <Divider sx={{ my: 2 }} />
 
-            {/* ORDER STATUS SECTION */}
+            {/* ORDER STATUS SUBSECTION */}
             <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
               Order Status
             </Typography>
@@ -320,6 +414,7 @@ export default function AdminSalesPage() {
                 Update Status
               </Button>
 
+              {/* show Cancel Order button only if status == PENDING */}
               {selectedOrder.status === "PENDING" && (
                 <Button 
                   variant="contained" 
@@ -333,6 +428,7 @@ export default function AdminSalesPage() {
 
             <Divider sx={{ my: 2 }} />
 
+            {/* ORDER ITEMS SUBSECTION */}
             <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
               Items
             </Typography>
