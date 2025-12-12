@@ -32,10 +32,23 @@ public interface UserRepo extends JpaRepository<User, Long> {
     @Query(value = "DELETE FROM payment_methods WHERE user_id = :userId", nativeQuery = true)
     void deletePaymentMethodsByUserId(@Param("userId") Long userId);
 
-    // Nullify orders.user_id
+    // Nullify orders.user_id (requires ALTER TABLE orders MODIFY COLUMN user_id BIGINT NULL)
     @Modifying
     @Query(value = "UPDATE orders SET user_id = NULL WHERE user_id = :userId", nativeQuery = true)
     void nullifyOrdersUserId(@Param("userId") Long userId);
+
+    // Delete user's orders (use only if orders.user_id cannot be made nullable)
+    @Modifying
+    @Query(value = "DELETE FROM order_items WHERE order_id IN (SELECT order_id FROM orders WHERE user_id = :userId)", nativeQuery = true)
+    void deleteOrderItemsByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM payments WHERE order_id IN (SELECT order_id FROM orders WHERE user_id = :userId)", nativeQuery = true)
+    void deletePaymentsByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM orders WHERE user_id = :userId", nativeQuery = true)
+    void deleteOrdersByUserId(@Param("userId") Long userId);
 
     // Break circular FK by setting users.address_id to null
     @Modifying

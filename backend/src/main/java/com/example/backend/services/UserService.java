@@ -71,7 +71,7 @@ public class UserService {
 
     // Delete user with all related entities using native SQL
     // This handles the circular FK constraint between users and addresses
-    // Orders are preserved with user_id set to null for audit purposes
+    // Orders are preserved with user_id set to null for audit (or deleted if DB doesn't allow NULL)
     @Transactional
     public void deleteUser(Long id) {
         // Verify user exists
@@ -80,8 +80,16 @@ public class UserService {
         }
 
         // Delete in correct order to respect FK constraints
-        // 1. Nullify orders to preserve them (audit trail)
-        userRepo.nullifyOrdersUserId(id);
+        // 1. Handle orders - try to nullify first (preserve for audit)
+        try {
+            userRepo.nullifyOrdersUserId(id);
+        } catch (Exception e) {
+            // If nullifying fails (orders.user_id is NOT NULL in DB),
+            // delete orders and related data instead
+            userRepo.deletePaymentsByUserId(id);
+            userRepo.deleteOrderItemsByUserId(id);
+            userRepo.deleteOrdersByUserId(id);
+        }
 
         // 2. Delete cart items (FK to cart)
         userRepo.deleteCartItemsByUserId(id);
